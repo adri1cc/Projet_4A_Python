@@ -1,290 +1,97 @@
-import requests
-import time
-import hashlib
-import hmac
-import json
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
 
-API_KEY = 'mx0vglMPbmg3e57ABt'
-API_SECRET = '71f46bfa8b4a4632860cc3845c262fb7'
-API_BASE_URL = 'https://api.mexc.com'
+import backtrader as bt
+import yfinance as yf
+import matplotlib.pyplot as plt
 
-# Function to create the signature for authenticated endpoints
-def create_signature(query_string):
-    return hmac.new(API_SECRET.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
+class MovingAverageCrossStrategy(bt.Strategy):
+    params = (
+        ("short_period", 2),
+        ("long_period", 8),
+    )
 
-# Function to make a request to the MEXC API
-def make_api_request(method, endpoint, params=None, data=None):
-    timestamp = str(int(time.time() * 1000))  # Millisecond timestamp
-    headers = {
-        'X-MEXC-APIKEY': API_KEY,
-        'Content-Type': 'application/json'
-    }
+    def __init__(self):
+        self.short_ma = bt.indicators.SimpleMovingAverage(
+            self.data.close, period=self.params.short_period
+        )
+        self.long_ma = bt.indicators.SimpleMovingAverage(
+            self.data.close, period=self.params.long_period
+        )
 
-    # Construct query string for signature
-    query_string = f'timestamp={timestamp}'
-    if params:
-        query_string += '&' + params
+        self.crossover = bt.indicators.CrossOver(self.short_ma, self.long_ma)
 
-    # Add signature to headers for signed endpoints
-    if API_KEY and API_SECRET:
-        signature = create_signature(query_string)
-        query_string += f'&signature={signature.lower()}'  # Signature in lowercase
-        print("query", query_string)
-    endpoint = API_BASE_URL + endpoint + '?' + query_string
+    def notify_order(self, order):
+        if order.status in [order.Completed]:
+            # L'ordre a été exécuté
+            print(
+                f"Order {'Buy' if order.isbuy() else 'Sell'} "
+                f"executed at {order.executed.price:.2f}, "
+                f"Cost: {order.executed.value:.2f}, "
+                f"Commission: {order.executed.comm:.2f}"
+            )
 
-    if method == 'GET':
-        response = requests.get(endpoint, headers=headers)
-    elif method == 'POST':
-        response = requests.post(endpoint, headers=headers, json=data)
-    else:
-        raise ValueError("Unsupported method")
+    def next(self):
+        if self.crossover > 0:
+            # Signal d'achat : croisement de la moyenne mobile courte au-dessus de la moyenne mobile longue
+            self.buy()
 
-    return response
+        elif self.crossover < 0:
+            # Signal de vente : croisement de la moyenne mobile courte en dessous de la moyenne mobile longue
+            self.sell()
 
-# Example: Getting market data for 'BTC_USD'
-symbol = 'BTCUSDT'
-market_data = make_api_request('GET', '/api/v3/', f'{symbol}')
+def run_backtest():
+    # Téléchargez les données depuis Yahoo Finance
+    data = yf.download('BTC-USD', '2021-01-01', '2021-04-01', auto_adjust=True)
 
-if market_data.status_code == 200:
-    print('Market Data for BTC_USD:')
-    print(json.dumps(market_data.json(), indent=2))
-else:
-    print('Failed to retrieve market data.')
-    print('Status Code:', market_data.status_code)
+    # Créez un objet PandasData avec les données téléchargées
+    data = bt.feeds.PandasData(dataname=data)
 
-def test_ping_endpoint():
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/ping")
+    # Configurer le moteur Backtrader
+    cerebro = bt.Cerebro()
 
-        if response.status_code == 200:
-            print("API Ping successful!")
+    # Ajoutez les données et la stratégie
+    cerebro.adddata(data)
+    cerebro.addstrategy(MovingAverageCrossStrategy)
+
+    # Paramètres du broker
+    cerebro.broker.set_cash(100)
+    start_portfolio_value = cerebro.broker.getvalue()
+    cerebro.addsizer(bt.sizers.SizerFix, stake=1)
+
+    # Exécutez le backtest
+    cerebro.run()
+
+    end_portfolio_value = cerebro.broker.getvalue()
+    pnl = end_portfolio_value - start_portfolio_value
+    print(f'Starting Portfolio Value: {start_portfolio_value:.2f}')
+    print(f'Final Portfolio Value: {end_portfolio_value:.2f}')
+    print(f'PnL: {pnl:.2f}')
+    # Affichez les résultats
+    cerebro.plot()
+
+    for strategy in cerebro.runstrats:
+        # Vérifiez si c'est une liste
+        if isinstance(strategy, list):
+            for sub_strategy in strategy:
+                plot_custom_chart(sub_strategy.orders_info)
         else:
-            print(f"Failed to ping the API. Status Code: {response.status_code}")
+            # Sinon, c'est une seule stratégie
+            plot_custom_chart(strategy.orders_info)
 
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
+def plot_custom_chart(orders_info):
+    # Extraire les informations sur les ordres
+    buy_points = [order['price'] for order in orders_info if order['action'] == 'Buy']
+    sell_points = [order['price'] for order in orders_info if order['action'] == 'Sell']
 
-test_ping_endpoint()
-
-def check_server_time():
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/time")
-
-        if response.status_code == 200:
-            server_time = response.json().get('serverTime')
-            print(f"Server Time: {server_time}")
-        else:
-            print(f"Failed to check server time. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-check_server_time()
-
-def get_default_symbols():
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/defaultSymbols")
-
-        if response.status_code == 200:
-            symbols = response.json().get('data')
-            if symbols:
-                print("Default Symbols:")
-                for symbol in symbols:
-                    print(symbol)
-            else:
-                print("No symbols returned.")
-        else:
-            print(f"Failed to get default symbols. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-#get_default_symbols()
-
-import requests
-
-API_BASE_URL = 'https://api.mexc.com'
-
-def get_exchange_info():
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/exchangeInfo")
-
-        if response.status_code == 200:
-            exchange_info = response.json()
-            if exchange_info:
-                print("Exchange Information:")
-                print(exchange_info)
-            else:
-                print("No exchange information returned.")
-        else:
-            print(f"Failed to get exchange information. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-#get_exchange_info()
-
-def get_trades_data(symbol, limit=10):
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/trades", params={"symbol": symbol, "limit": limit})
-
-        if response.status_code == 200:
-            trades_data = response.json()
-            if trades_data:
-                print(f"Trades Data for {symbol}:")
-                print(trades_data)
-            else:
-                print(f"No trades data available for {symbol}.")
-        else:
-            print(f"Failed to get trades data. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-# Example usage: Fetching trades data for symbol 'BTC_USDT' with a limit of 10 trades
-#get_trades_data('BTCUSDT', limit=10)
-
-def get_kline_data(symbol, interval='1h', limit=10):
-    try:
-        params = {
-            "symbol": symbol,
-            "interval": interval,
-            "limit": limit
-        }
-        response = requests.get(f"{API_BASE_URL}/api/v3/klines", params=params)
-
-        if response.status_code == 200:
-            kline_data = response.json()
-            if kline_data:
-                print(f"Kline Data for {symbol} (Interval: {interval}):")
-                print(kline_data)
-            else:
-                print(f"No kline data available for {symbol}.")
-        else:
-            print(f"Failed to get kline data. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-# Example usage: Fetching Kline data for symbol 'BTC_USDT' with a 1-hour interval and a limit of 10 Klines
-get_kline_data('BTCUSDT', interval='1h', limit=10)
-
-def get_agg_trades_data(symbol, limit=10):
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/aggTrades", params={"symbol": symbol, "limit": limit})
-
-        if response.status_code == 200:
-            agg_trades_data = response.json()
-            if agg_trades_data:
-                print(f"Aggregated Trades Data for {symbol}:")
-                print(agg_trades_data)
-            else:
-                print(f"No aggregated trades data available for {symbol}.")
-        else:
-            print(f"Failed to get aggregated trades data. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-# Example usage: Fetching aggregated trades data for symbol 'BTC_USDT' with a limit of 10 trades
-#get_agg_trades_data('BTCUSDT', limit=10)
-
-def get_24hr_ticker(symbol):
-    try:
-        response = requests.get(f"{API_BASE_URL}/api/v3/ticker/24hr", params={"symbol": symbol})
-
-        if response.status_code == 200:
-            ticker_data = response.json()
-            if ticker_data:
-                print(f"24-hour Ticker Data for {symbol}:")
-                print(ticker_data)
-            else:
-                print(f"No 24-hour ticker data available for {symbol}.")
-        else:
-            print(f"Failed to get 24-hour ticker data. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-def place_test_order(symbol, side, quantity, price):
-    timestamp = str(int(time.time() * 1000))
-    headers = {
-        'X-MEXC-APIKEY': API_KEY,
-        'Content-Type': 'application/json'
-    }
-
-    query_string = f"symbol={symbol}&side={side}&quantity={quantity}&price={price}&type=limit&timeInForce=GTC&timestamp={timestamp}"
-    signature = create_signature(query_string)
-    query_string += f"&signature={signature.lower()}"
-    
-    endpoint = f"{API_BASE_URL}/api/v3/order/test"
-    data = {
-        "symbol": symbol,
-        "side": side,
-        "quantity": quantity,
-        "price": price,
-        "type": "limit",
-        "timeInForce": "GTC",
-        "timestamp": int(timestamp),
-        "signature": signature.lower()
-    }
-
-    try:
-        response = requests.post(endpoint, headers=headers, json=data)
-        
-        if response.status_code == 200:
-            print("Test order placed successfully.")
-            print(response.json())
-        else:
-            print(f"Failed to place test order. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-# Example usage: Placing a test order for BTC/USDT buying 1 unit at $50000
-place_test_order('BTCUSDT', 'BUY', 1, 50000)
-
-
-def get_orders(symbol):
-    timestamp = str(int(time.time() * 1000))
-    headers = {
-        'X-MEXC-APIKEY': API_KEY,
-        'Content-Type': 'application/json'
-    }
-
-    query_string = f"symbol={symbol}&timestamp={timestamp}"
-    signature = create_signature(query_string)
-    query_string += f"&signature={signature.lower()}"
-    
-    endpoint = f"{API_BASE_URL}/api/v3/order?{query_string}"
-
-    try:
-        response = requests.get(endpoint, headers=headers)
-        
-        if response.status_code == 200:
-            print("Orders retrieved successfully.")
-            print(response.json())
-        else:
-            print(f"Failed to retrieve orders. Status Code: {response.status_code}")
-
-    except requests.RequestException as e:
-        print(f"Request Exception: {e}")
-
-# Example usage: Retrieving orders for BTC/USDT
-get_orders('BTCUSDT')
-
-import requests
-
-def get_kline_data(symbol, interval):
-    endpoint = f"spot@public.kline.v3.api@{symbol}@{interval}"
-    response = requests.get(f"https://api.mexc.com/{endpoint}")
-
-    if response.status_code == 200:
-        kline_data = response.json()
-        print(f"Kline Data for {symbol} ({interval}):")
-        print(kline_data)
-    else:
-        print(f"Failed to get Kline data. Status Code: {response.status_code}")
-
-# Example usage: Fetching Kline data for symbol 'BTCUSDT' with 1-minute intervals
-get_kline_data('BTCUSDT', '1m')
+    # Créer un graphique avec Matplotlib
+    plt.figure(figsize=(10, 6))
+    plt.plot(buy_points, 'go', label='Buy')
+    plt.plot(sell_points, 'ro', label='Sell')
+    plt.title('Custom Chart - Buy and Sell Points')
+    plt.xlabel('Bar Index')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.show()
+if __name__ == '__main__':
+    run_backtest()
