@@ -8,15 +8,17 @@ from pandas import  read_csv
 from  bar_feed import *
 import datetime
 from matplotlib import dates as mPlotDATEs
+import os
 
 
 #TODO create function that download pair and return a feed sur une plage de temps donnée
 #TODO gerer si les fichiers de donnée existe deja ou pas
 
 def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
-    df = api.getOHLCV(instrument, timeframe, since, limit)
     csv_filename = instrument.replace('/', '-') + str(since) + str(limit) + '.csv'
-    df.to_csv(csv_filename, index=False)
+    if not os.path.exists(csv_filename):
+        df = api.getOHLCV(instrument, timeframe, since, limit)
+        df.to_csv(csv_filename, index=False)
     df = read_csv(csv_filename, parse_dates=[0], index_col=0)
     df["Index"] = df.index
     feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
