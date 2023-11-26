@@ -41,6 +41,7 @@ class MyStrategy(strategy.BacktestingStrategy):
         super(MyStrategy, self).__init__(feed, portfolio)
         self.__position = None
         self.__instrument = instrument
+        self.__smaPeriod = smaPeriod
         self.__sma = ma.SMA(feed[instrument].getPriceDataSeries(), smaPeriod)
         self.__portfolio_values = []  # List to store portfolio values
         self.__last_portfolio_value = None  # To keep track of the last portfolio value
@@ -90,4 +91,6 @@ class MyStrategy(strategy.BacktestingStrategy):
 
     def getSMA(self):
         return self.__sma
+    def getName(self):
+        return self.__instrument + " " + "Mystrategy" + " " + str(self.__smaPeriod)
     

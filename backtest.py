@@ -28,8 +28,8 @@ def run_strategy(smaPeriod):
     portfolio_values = myStrategy.getPortfolioValues()
     final = (myStrategy.getBroker().getEquity()-100000)/1000
 
-    #rint("Final portfolio value: $%.2f" % myStrategy.getBroker().getEquity())
-    #print(f"PnL(en %): {final:.2f}")
+    print("Final portfolio value: $%.2f" % myStrategy.getBroker().getEquity())
+    print(f"PnL(en %): {final:.2f}")
     # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
     dates, portfolio_values, changes = zip(*portfolio_values)
 
@@ -37,6 +37,7 @@ def run_strategy(smaPeriod):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, subplot_titles=['Portfolio Values', 'Portfolio Changes'])
     fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=1, col=1)
     fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=2, col=1)
-    fig.update_layout(title_text='Portfolio Values and Changes Over Time', xaxis_title='Date', showlegend=True)
+    title = 'Backtest '+ myStrategy.getName()
+    fig.update_layout(title_text=title, showlegend=True)
 
     return fig
