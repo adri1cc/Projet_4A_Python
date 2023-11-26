@@ -1,26 +1,35 @@
 from __future__ import print_function
-from pyalgotrade import strategy
-from pyalgotrade.barfeed import quandlfeed
-from pyalgotrade.technical import ma
-from pyalgotrade import plotter
-from pyalgotrade.barfeed import quandlfeed
 from pyalgotrade.stratanalyzer import returns
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from strategies import *
+import api
+from pandas import  read_csv
+from  bar_feed import *
+import datetime
+from matplotlib import dates as mPlotDATEs
+
 
 #TODO create function that download pair and return a feed sur une plage de temps donnée
 
-
-
+def timestamp_converter(aString):
+    if isinstance(aString, bytes):
+        aString = aString.decode('utf-8')  # Adjust the encoding if necessary
+    return mPlotDATEs.date2num(datetime.datetime.strptime(aString, "%Y-%m-%d %H:%M:%S"))
 
 def run_strategy(smaPeriod):
-    # Load the bar feed from the CSV file
-    feed = quandlfeed.Feed()
-    feed.addBarsFromCSV("BTC/USD", "BTC-USD.csv")
+ 
+    df = api.getOHLCV("ETH/USDT", "1m")
+    df.to_csv('ETH-USDT.csv', index=False)
+    df = read_csv("ETH-USDT.csv", parse_dates=[0], index_col=0)
+    df["Index"] = df.index
+    instrument = 'BTC/USDT'
+    feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
+
+
     # Evaluate the strategy with the feed.
     portfolio = 100000
-    myStrategy = MyStrategy(feed, "BTC/USD", smaPeriod, portfolio)
+    myStrategy = MyStrategy(feed, "BTC/USDT", smaPeriod, portfolio)
     
     returnsAnalyzer = returns.Returns()
     myStrategy.attachAnalyzer(returnsAnalyzer)
