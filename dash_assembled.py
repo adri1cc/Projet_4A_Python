@@ -4,6 +4,7 @@ import plotly.io as pio
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
+from dash.exceptions import PreventUpdate
 
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
@@ -36,13 +37,14 @@ test_mode_switch = html.Div(
 )
 
 ### LES FIGURES ###
-fig = run_strategy(8,"BTC/USDT")
-fig2 = run_strategy(15, "BTC/USDT")
+fig = go.Figure()
+fig2 = go.Figure()
 
 
 ### LES BOUTONS ###
 trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
 stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
+backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
 
 ### LES LISTES DEROULANTES ###
 
@@ -60,6 +62,21 @@ strat = dcc.Dropdown(
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
                             ],value='Stratégie',id='strat-dropdown',
+                    )
+pair_backtest = dcc.Dropdown(
+                    options=[
+                        {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
+                        {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
+                        {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
+                            ],value='BTC/USDT',id='pair-backtest-dropdown',
+                    )
+
+strat_backtest = dcc.Dropdown(
+                    options=[
+                        {'label': 'Stratégie 1', 'value': 'Stratégie 1'},
+                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
+                        {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
+                            ],value='Stratégie',id='strat-backtest-dropdown',
                     )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
@@ -79,12 +96,24 @@ app.layout = dbc.Container(
             [
                 dbc.Row(
                     [
-                        dbc.Col(dcc.Graph(id="graph", figure=fig, className="border"), width=8),
+                        dbc.Col([
+                            html.Div([backtest_button], style={"position": "absolute", "top": "100px", "left": "250px"},className="d-grid gap-2 d-md-block",)
+
+                            ]),
+                            
+                        dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "250px"}, width=2),
+                        dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "250px"}, width=2),
+                    ]
+                ),
+                dbc.Row(
+                    [
+                        dbc.Col(dcc.Graph(id="graph", figure=fig, className="border"), width=7, style={"position": "relative", "left": "500px"}),
+                        dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
+
                     ]
                 ),dbc.Row(
                     [
-                        dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=8),
-                    ]
+                                            ]
                 )
             ],
             className="mt-4",id="Analyse",  # Adjust margin-top as necessary
@@ -116,18 +145,29 @@ app.layout = dbc.Container(
 )
         
 
-@callback(
-    Output("graph", "figure"),
-    Output("graph2", "figure"),
-    Input("color-mode-switch", "value"),
-    allow_duplicate=True,
+@app.callback(
+    [Output("graph", "figure"),
+     Output("graph2", "figure")],
+    [Input("color-mode-switch", "value"),
+     Input('strat-backtest-dropdown', 'value'),
+     Input('pair-backtest-dropdown', 'value'),
+     Input("backtest-button", "n_clicks")],
+    allow_duplicate=True
 )
-def update_figure_template(switch_on):
+def update_figures(switch_on, selected_strat, selected_pair, n_clicks):
+    global fig, fig2  # Utilisez global pour mettre à jour ces variables globales
+    if n_clicks > 0:
+        # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
+        fig = run_strategy(10, selected_pair)
+        
+        fig2 = run_strategy(20, selected_pair)  # Mettez à jour fig2 selon vos besoins
+
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
     fig2.update_layout(template=template)
 
+    
 
     return fig, fig2
 
@@ -146,7 +186,7 @@ def hide_graph(switch_value):
         # If the switch is off, hide the graph and the button
         return {"display": "none"}, {"display": "block"}, {"display": "block"}
 
-@app.callback(
+@callback(
     Output('selected-message', 'children'),
     Input('strat-dropdown', 'value'),
     Input('pair-dropdown', 'value'),
