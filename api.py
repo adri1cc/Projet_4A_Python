@@ -64,11 +64,11 @@ def getInfoAccount():
     except Exception as e:
         print('Une erreur s\'est produite : ', type(e).__name__, str(e))
     
-def getOHLCV(symbol, timeframe):
-
+def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None):
+    
     # Récupérer les bougies
     try:
-        candles = exchange.fetch_ohlcv(symbol, timeframe)
+        candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
         
         # Créer une liste pour stocker les données des bougies
         candle_data = []

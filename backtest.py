@@ -13,14 +13,23 @@ from matplotlib import dates as mPlotDATEs
 #TODO create function that download pair and return a feed sur une plage de temps donnée
 #TODO gerer si les fichiers de donnée existe deja ou pas
 
-def getFeed(instrument, timeframe):
-    df = api.getOHLCV(instrument, timeframe)
-    csv_filename = instrument.replace('/', '-') + '.csv'
+def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
+    df = api.getOHLCV(instrument, timeframe, since, limit)
+    csv_filename = instrument.replace('/', '-') + str(since) + str(limit) + '.csv'
     df.to_csv(csv_filename, index=False)
     df = read_csv(csv_filename, parse_dates=[0], index_col=0)
     df["Index"] = df.index
     feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
     return feed
+
+def convert_date_string_to_timestamp(date_string):
+    # Convert the date string to a datetime object
+    dt_object = datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+
+    # Convert the datetime object to a timestamp in milliseconds
+    timestamp_milliseconds = int(dt_object.timestamp() * 1000)
+
+    return timestamp_milliseconds
 
 def timestamp_converter(aString):
     if isinstance(aString, bytes):
@@ -29,8 +38,9 @@ def timestamp_converter(aString):
 
 def run_strategy(smaPeriod, instrument):
  
-
-    feed = getFeed(instrument,"5m")
+    date_string = "2023-05-01 00:00:00"
+    timestamp = convert_date_string_to_timestamp(date_string)
+    feed = getFeed(instrument,"5m",timestamp,5000)
     # Evaluate the strategy with the feed.
     portfolio = 100000
     myStrategy = MyStrategy(feed, instrument, smaPeriod, portfolio)
