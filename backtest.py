@@ -11,25 +11,29 @@ from matplotlib import dates as mPlotDATEs
 
 
 #TODO create function that download pair and return a feed sur une plage de temps donnée
+#TODO gerer si les fichiers de donnée existe deja ou pas
+
+def getFeed(instrument, timeframe):
+    df = api.getOHLCV(instrument, timeframe)
+    csv_filename = instrument.replace('/', '-') + '.csv'
+    df.to_csv(csv_filename, index=False)
+    df = read_csv(csv_filename, parse_dates=[0], index_col=0)
+    df["Index"] = df.index
+    feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
+    return feed
 
 def timestamp_converter(aString):
     if isinstance(aString, bytes):
         aString = aString.decode('utf-8')  # Adjust the encoding if necessary
     return mPlotDATEs.date2num(datetime.datetime.strptime(aString, "%Y-%m-%d %H:%M:%S"))
 
-def run_strategy(smaPeriod):
+def run_strategy(smaPeriod, instrument):
  
-    df = api.getOHLCV("ETH/USDT", "1m")
-    df.to_csv('ETH-USDT.csv', index=False)
-    df = read_csv("ETH-USDT.csv", parse_dates=[0], index_col=0)
-    df["Index"] = df.index
-    instrument = 'BTC/USDT'
-    feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
 
-
+    feed = getFeed(instrument,"5m")
     # Evaluate the strategy with the feed.
     portfolio = 100000
-    myStrategy = MyStrategy(feed, "BTC/USDT", smaPeriod, portfolio)
+    myStrategy = MyStrategy(feed, instrument, smaPeriod, portfolio)
     
     returnsAnalyzer = returns.Returns()
     myStrategy.attachAnalyzer(returnsAnalyzer)

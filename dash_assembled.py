@@ -36,8 +36,8 @@ test_mode_switch = html.Div(
 )
 
 ### LES FIGURES ###
-fig = run_strategy(8)
-fig2 = run_strategy(15)
+fig = run_strategy(8,"BTC/USDT")
+fig2 = run_strategy(15, "BTC/USDT")
 
 
 ### LES BOUTONS ###
