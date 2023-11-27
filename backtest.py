@@ -13,6 +13,8 @@ import pandas as pd
 
 
 def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
+    if limit>1000:
+        limit=1000
     csv_filename = instrument.replace('/', '-') + str(since) + str(limit) + '.csv'
     if not os.path.exists(csv_filename):
         df = api.getOHLCV(instrument, timeframe, since, limit)
@@ -40,7 +42,7 @@ def run_strategy(smaPeriod, instrument):
  
     date_string = "2023-05-01 00:00:00"
     timestamp = convert_date_string_to_timestamp(date_string)
-    feed,df = getFeed(instrument,"5m",timestamp,5000)
+    feed,df = getFeed(instrument,"5m",timestamp,1000)
     print(df['Close'])
     # Evaluate the strategy with the feed.
     portfolio = 100000
