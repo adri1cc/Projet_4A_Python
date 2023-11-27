@@ -1,10 +1,11 @@
-from dash import Dash, html, dcc, Input, Output, Patch, clientside_callback, callback
+from dash import Dash, html, dcc, Input, Output, Patch, clientside_callback, callback, State
 import plotly.express as px
 import plotly.io as pio
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
+from strat_live import *
 
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
@@ -44,6 +45,7 @@ fig = go.Figure()
 ### LES BOUTONS ###
 trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
 stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
+previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
 
 ### LES LISTES DEROULANTES ###
@@ -73,14 +75,16 @@ pair_backtest = dcc.Dropdown(
 
 strat_backtest = dcc.Dropdown(
                     options=[
-                        {'label': 'Stratégie 1', 'value': 'Stratégie 1'},
+                        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
                             ],value='Stratégie',id='strat-backtest-dropdown',
                     )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
+message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 
+trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
@@ -90,7 +94,7 @@ app.layout = dbc.Container(
             [
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
-            ]
+            ],
         ),
         dbc.Container( # PARTIE ANALYSE
             [
@@ -133,6 +137,7 @@ app.layout = dbc.Container(
                 dbc.Row(
                     [
                         selected_message,
+                        message_bis,
                     ],
                 ),
             ],id="Live1",
@@ -147,9 +152,28 @@ app.layout = dbc.Container(
         ),
     ]
 )
-        
-
-@app.callback( #Output("graph2", "figure")
+# Définir la fonction de callback
+@app.callback(
+    Output('message-bis', 'children'),
+    [Input('trade-button', 'n_clicks'),
+     Input('stop-trade-button', 'n_clicks')],
+    [State('message-bis', 'children')]
+)
+def trade(n_clicks_trade, n_clicks_stop, previous_message):
+    if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
+        previous_state['trade'] = n_clicks_trade
+        trading_logic['stop_flag'] = False
+        start_trade(trading_logic)
+        return 'Trade started'
+    elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
+        previous_state['stop'] = n_clicks_stop
+        stop_trade(trading_logic)
+        return 'Trade stopped'
+    else:
+        # No button clicks
+        return previous_message
+    
+@callback( #Output("graph2", "figure")
     [Output("graph", "figure"),
      ],
     [Input("color-mode-switch", "value"),
@@ -163,7 +187,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     global fig # Utilisez global pour mettre à jour ces variables globales
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
-        fig = run_strategy(slider_value, selected_pair)
+        fig = run_SimpleSMA(slider_value, selected_pair)
         
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"

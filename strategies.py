@@ -3,42 +3,9 @@ from pyalgotrade.technical import ma
 from pyalgotrade.technical import cross
 
 
-class SMACrossOver(strategy.BacktestingStrategy):
+class SimpleSMA(strategy.BacktestingStrategy):
     def __init__(self, feed, instrument, smaPeriod, portfolio):
-        super(SMACrossOver, self).__init__(feed, portfolio)
-        self.__instrument = instrument
-        self.__position = None
-        #self.setUseAdjustedValues(True)
-        self.__prices = feed[instrument].getPriceDataSeries()
-        self.__sma = ma.SMA(self.__prices, smaPeriod)
-
-    def getSMA(self):
-        return self.__sma
-
-    def onEnterCanceled(self, position):
-        self.__position = None
-
-    def onExitOk(self, position):
-        self.__position = None
-
-    def onExitCanceled(self, position):
-        # If the exit was canceled, re-submit it.
-        self.__position.exitMarket()
-
-    def onBars(self, bars):
-        # If a position was not opened, check if we should enter a long position.
-        if self.__position is None:
-            if cross.cross_above(self.__prices, self.__sma) > 0:
-                shares = int(self.getBroker().getCash() * 0.9 / bars[self.__instrument].getPrice())
-                # Enter a buy market order. The order is good till canceled.
-                self.__position = self.enterLong(self.__instrument, shares, True)
-        # Check if we have to exit the position.
-        elif not self.__position.exitActive() and cross.cross_below(self.__prices, self.__sma) > 0:
-            self.__position.exitMarket()
-
-class MyStrategy(strategy.BacktestingStrategy):
-    def __init__(self, feed, instrument, smaPeriod, portfolio):
-        super(MyStrategy, self).__init__(feed, portfolio)
+        super(SimpleSMA, self).__init__(feed, portfolio)
         self.__position = None
         self.__instrument = instrument
         self.__smaPeriod = smaPeriod
@@ -92,5 +59,5 @@ class MyStrategy(strategy.BacktestingStrategy):
     def getSMA(self):
         return self.__sma
     def getName(self):
-        return self.__instrument + " " + "Mystrategy" + " " + str(self.__smaPeriod)
+        return self.__instrument + " " + "SimpleSMA" + " " + str(self.__smaPeriod)
     
