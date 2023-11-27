@@ -85,7 +85,7 @@ selected_message = html.Div(id='selected-message', style={"position": "absolute"
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
     [
-        html.Div(["DASHBOARD TRADING"], className="bg-primary text-white h3 p-2"),
+        html.Div(["DASHBOARD TRADING"], className="bg-primary text-white h3 p-2",),
         dbc.Row(
             [
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
@@ -97,29 +97,28 @@ app.layout = dbc.Container(
                 dbc.Row(
                     [
                         dbc.Col([
-                            html.Div([backtest_button], style={"position": "absolute", "top": "100px", "left": "250px"},className="d-grid gap-2 d-md-block",)
+                            html.Div([backtest_button], style={"position": "absolute", "top": "100px", "left": "120px"},className="d-grid gap-2 d-md-block",)
 
                             ]),
                             
-                        dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "250px"}, width=2),
-                        dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "250px"}, width=2),
+                        dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "100px"}, width=2),
+                        dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "100px"}, width=2),
                     ]
                 ),
                 dbc.Row(
                     [
-                        dbc.Col(dcc.Graph(id="graph", figure=fig, className="border"), width=7, style={"position": "relative", "left": "500px"}),
+                        dbc.Col(
+                            [
+                                dcc.Graph(id="graph", figure=fig, className="border"),
+                                dcc.Slider(id='slider',min=2,max=50,step=1,value=25,tooltip={'placement': 'bottom', 'always_visible': True})
+                            ],
+                            width=10,
+                            style={"position": "relative", "left": "250px"},
+                        ),
                         # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
 
                     ]
-                ),dbc.Row(
-                    dbc.Col(
-                        dcc.Slider( # Valeur initialemarks={i: str(i) for i in range(2, 101, 10)},
-                        id='slider',min=2,max=50,step=1,value=25,marks={}, tooltip={'placement': 'bottom', 'always_visible': True},
-                ),style={"margin-top": "20px", "position": "relative", "left": "500px"},
-                width=7
-            ),
-            style={"margin-top": "20px"}
-        )
+                ),
             ],
             className="mt-4",id="Analyse",  # Adjust margin-top as necessary
         ),
