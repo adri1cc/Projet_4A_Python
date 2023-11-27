@@ -4,11 +4,12 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from strategies import *
 import api
-from pandas import  read_csv
+from pandas import  Timestamp, read_csv
 from  bar_feed import *
 import datetime
 from matplotlib import dates as mPlotDATEs
 import os
+import pandas as pd
 
 
 def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
@@ -19,7 +20,7 @@ def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = 
     df = read_csv(csv_filename, parse_dates=[0], index_col=0)
     df["Index"] = df.index
     feed = DataFrameBarFeed(df, instrument, barfeed.Frequency.DAY) 
-    return feed
+    return feed,df
 
 def convert_date_string_to_timestamp(date_string):
     # Convert the date string to a datetime object
@@ -39,7 +40,8 @@ def run_strategy(smaPeriod, instrument):
  
     date_string = "2023-05-01 00:00:00"
     timestamp = convert_date_string_to_timestamp(date_string)
-    feed = getFeed(instrument,"5m",timestamp,5000)
+    feed,df = getFeed(instrument,"5m",timestamp,5000)
+    print(df['Close'])
     # Evaluate the strategy with the feed.
     portfolio = 100000
     myStrategy = MyStrategy(feed, instrument, smaPeriod, portfolio)
@@ -54,12 +56,21 @@ def run_strategy(smaPeriod, instrument):
     print(f"PnL: {final:.2f} %")
     # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
     dates, portfolio_values, changes = zip(*portfolio_values)
+    # print(dates)
 
     # Créez une figure avec deux sous-graphiques (un pour les valeurs du portefeuille, un pour les variations)
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, subplot_titles=['Portfolio Values', 'Portfolio Changes'])
-    fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=1, col=1)
-    fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=2, col=1)
+    fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+    fig.add_trace(go.Candlestick(x=df['Index'],
+                open=df['Open'],
+                high=df['High'],
+                low=df['Low'],
+                close=df['Close'],
+                name=f'{instrument} Candlestick'),
+                row=1, col=1)
+    fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
+    fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=3, col=1)
     title = 'Backtest '+ myStrategy.getName()
     fig.update_layout(title_text=title, showlegend=True)
+    fig.update_layout(xaxis_rangeslider_visible=False)
 
     return fig
