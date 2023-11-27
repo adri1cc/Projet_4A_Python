@@ -38,7 +38,7 @@ test_mode_switch = html.Div(
 
 ### LES FIGURES ###
 fig = go.Figure()
-fig2 = go.Figure()
+# fig2 = go.Figure()
 
 
 ### LES BOUTONS ###
@@ -108,15 +108,15 @@ app.layout = dbc.Container(
                 dbc.Row(
                     [
                         dbc.Col(dcc.Graph(id="graph", figure=fig, className="border"), width=7, style={"position": "relative", "left": "500px"}),
-                        dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
+                        # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
 
                     ]
                 ),dbc.Row(
                     dbc.Col(
                         dcc.Slider( # Valeur initialemarks={i: str(i) for i in range(2, 101, 10)},
-                        id='slider',min=2,max=100,step=1,value=10, tooltip={'placement': 'bottom', 'always_visible': True},
-                ),
-                width=12
+                        id='slider',min=2,max=50,step=1,value=25,marks={}, tooltip={'placement': 'bottom', 'always_visible': True},
+                ),style={"margin-top": "20px", "position": "relative", "left": "500px"},
+                width=7
             ),
             style={"margin-top": "20px"}
         )
@@ -150,9 +150,9 @@ app.layout = dbc.Container(
 )
         
 
-@app.callback(
+@app.callback( #Output("graph2", "figure")
     [Output("graph", "figure"),
-     Output("graph2", "figure")],
+     ],
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
@@ -161,21 +161,21 @@ app.layout = dbc.Container(
     allow_duplicate=True
 )
 def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_value):
-    global fig, fig2  # Utilisez global pour mettre à jour ces variables globales
+    global fig # Utilisez global pour mettre à jour ces variables globales
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
         fig = run_strategy(slider_value, selected_pair)
         
-        fig2 = run_strategy(20, selected_pair)  # Mettez à jour fig2 selon vos besoins
+        
 
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
-    fig2.update_layout(template=template)
+    # fig2.update_layout(template=template)
 
     
 
-    return fig, fig2
+    return [fig] #,fig2
 
 @callback(
     Output("Analyse", "style"),
