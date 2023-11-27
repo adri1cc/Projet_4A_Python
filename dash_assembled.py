@@ -165,14 +165,10 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
         fig = run_strategy(slider_value, selected_pair)
         
-        
-
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
     # fig2.update_layout(template=template)
-
-    
 
     return [fig] #,fig2
 

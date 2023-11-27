@@ -56,6 +56,9 @@ def run_strategy(smaPeriod, instrument):
 
     print("Final portfolio value: $%.2f" % myStrategy.getBroker().getEquity())
     print(f"PnL: {final:.2f} %")
+    return createFigure(df, instrument, myStrategy.getName())
+
+def createFigure(df, instrument, name):
     # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
     dates, portfolio_values, changes = zip(*portfolio_values)
     # print(dates)
@@ -71,7 +74,7 @@ def run_strategy(smaPeriod, instrument):
                 row=1, col=1)
     fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
     fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=3, col=1)
-    title = 'Backtest '+ myStrategy.getName()
+    title = 'Backtest '+ name
     fig.update_layout(title_text=title, showlegend=True)
     fig.update_layout(xaxis_rangeslider_visible=False)
 
