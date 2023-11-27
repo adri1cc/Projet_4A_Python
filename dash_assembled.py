@@ -112,9 +112,14 @@ app.layout = dbc.Container(
 
                     ]
                 ),dbc.Row(
-                    [
-                                            ]
-                )
+                    dbc.Col(
+                        dcc.Slider( # Valeur initialemarks={i: str(i) for i in range(2, 101, 10)},
+                        id='slider',min=2,max=100,step=1,value=10, tooltip={'placement': 'bottom', 'always_visible': True},
+                ),
+                width=12
+            ),
+            style={"margin-top": "20px"}
+        )
             ],
             className="mt-4",id="Analyse",  # Adjust margin-top as necessary
         ),
@@ -151,14 +156,15 @@ app.layout = dbc.Container(
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
-     Input("backtest-button", "n_clicks")],
+     Input("backtest-button", "n_clicks"),
+     Input('slider', 'value')],
     allow_duplicate=True
 )
-def update_figures(switch_on, selected_strat, selected_pair, n_clicks):
+def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_value):
     global fig, fig2  # Utilisez global pour mettre à jour ces variables globales
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
-        fig = run_strategy(10, selected_pair)
+        fig = run_strategy(slider_value, selected_pair)
         
         fig2 = run_strategy(20, selected_pair)  # Mettez à jour fig2 selon vos besoins
 

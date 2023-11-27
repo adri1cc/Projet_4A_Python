@@ -11,9 +11,6 @@ from matplotlib import dates as mPlotDATEs
 import os
 
 
-#TODO create function that download pair and return a feed sur une plage de temps donnée
-#TODO gerer si les fichiers de donnée existe deja ou pas
-
 def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
     csv_filename = instrument.replace('/', '-') + str(since) + str(limit) + '.csv'
     if not os.path.exists(csv_filename):
@@ -54,7 +51,7 @@ def run_strategy(smaPeriod, instrument):
     final = (myStrategy.getBroker().getEquity()-100000)/1000
 
     print("Final portfolio value: $%.2f" % myStrategy.getBroker().getEquity())
-    print(f"PnL(en %): {final:.2f}")
+    print(f"PnL: {final:.2f} %")
     # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
     dates, portfolio_values, changes = zip(*portfolio_values)
 
