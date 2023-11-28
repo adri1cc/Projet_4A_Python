@@ -21,5 +21,12 @@ def SimpleSMALive(pair, timeframe, sma):
     df = df + getOHLCV(pair, timeframe, limit=1)
     df['SMA'].df['Close'].rolling(sma).mean() #A test avec open high et low
     last_value = df['close'].iloc[-1]
-    if  last_value > 
+    last_sma = df['SMA'].iloc[-1]
+    if last_sma is None:
+        return
+    if  last_value > last_sma:
+        
+
+
+
     return 
