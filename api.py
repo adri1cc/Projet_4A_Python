@@ -91,11 +91,35 @@ def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None
         print('Erreur d\'échange : ', type(e).__name__, str(e))
     except Exception as e:
         print('Une erreur s\'est produite : ', type(e).__name__, str(e))
-# def main():
-    
-#     df = getOHLCV("BTC/USDT", "1m")
-#     # Save the data to a CSV file (optional if you already have the DataFrame)
-#     df.to_csv('BTC-USDT.csv', index=False)
 
-# if __name__ == "__main__":
-#     main()
+def place_order(symbol, direction, leverage, stop_loss, take_profit, investment_value, limit_price):
+
+    # Direction : long or short
+    
+    # Order parameters
+    side = 'buy' if direction == 'long' else 'sell'
+    # Create the order
+    order_params = {
+        'symbol': symbol,
+        'side': side,
+        'type': 'limit',  # You can adjust the order type according to your needs
+        'amount': investment_value,
+        'stopPrice': stop_loss,
+        'takeProfitPrice': take_profit,
+        'price': limit_price,  # Specify the limit price
+    }
+
+    try:
+        # Place the order
+        order = exchange.create_order(**order_params)
+        print('Order placed successfully:', order)
+
+    except ccxt.NetworkError as e:
+        print('Connection problem: ', type(e).__name__, str(e))
+    except ccxt.ExchangeError as e:
+        print('Exchange error: ', type(e).__name__, str(e))
+    except Exception as e:
+        print('An error occurred: ', type(e).__name__, str(e))
+    return 
+
+
