@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
-from strat_live import *
+#from strat_live import *
 
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
@@ -84,7 +84,7 @@ strat_backtest = dcc.Dropdown(
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 
-trading_logic = create_trading_logic()
+#trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
