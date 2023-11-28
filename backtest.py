@@ -38,15 +38,15 @@ def timestamp_converter(aString):
         aString = aString.decode('utf-8')  # Adjust the encoding if necessary
     return mPlotDATEs.date2num(datetime.datetime.strptime(aString, "%Y-%m-%d %H:%M:%S"))
 
-def run_strategy(smaPeriod, instrument):
+def run_SimpleSMA(smaPeriod, instrument):
  
     date_string = "2023-05-01 00:00:00"
     timestamp = convert_date_string_to_timestamp(date_string)
     feed,df = getFeed(instrument,"5m",timestamp,1000)
-    print(df['Close'])
+    
     # Evaluate the strategy with the feed.
     portfolio = 100000
-    myStrategy = MyStrategy(feed, instrument, smaPeriod, portfolio)
+    myStrategy = SimpleSMA(feed, instrument, smaPeriod, portfolio)
     
     returnsAnalyzer = returns.Returns()
     myStrategy.attachAnalyzer(returnsAnalyzer)
@@ -56,9 +56,9 @@ def run_strategy(smaPeriod, instrument):
 
     print("Final portfolio value: $%.2f" % myStrategy.getBroker().getEquity())
     print(f"PnL: {final:.2f} %")
-    return createFigure(df, instrument, myStrategy.getName())
+    return createFigure(df, instrument, myStrategy.getName(), portfolio_values)
 
-def createFigure(df, instrument, name):
+def createFigure(df, instrument, name, portfolio_values):
     # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
     dates, portfolio_values, changes = zip(*portfolio_values)
     # print(dates)
