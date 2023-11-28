@@ -1,6 +1,8 @@
+from pickletools import long1
 import time
 from api import *
 df = None
+live_trade = False
 
 def create_trading_logic():
     return {'stop_flag': False}
@@ -24,8 +26,15 @@ def SimpleSMALive(pair, timeframe, sma):
     last_sma = df['SMA'].iloc[-1]
     if last_sma is None:
         return
-    if  last_value > last_sma:
-        
+    if live_trade is False:
+        if  last_value > last_sma:
+         run long1
+         live_trade = True
+
+    elif last_value < last_sma:
+        run anti long
+        live_trade = False
+
 
 
 
