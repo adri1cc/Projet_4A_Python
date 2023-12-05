@@ -63,7 +63,7 @@ def getInfoAccount():
         print('Erreur d\'échange : ', type(e).__name__, str(e))
     except Exception as e:
         print('Une erreur s\'est produite : ', type(e).__name__, str(e))
-    
+
 def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None):
     
     # Récupérer les bougies
