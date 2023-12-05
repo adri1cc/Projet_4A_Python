@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
+import api
 #from strat_live import *
 
 
@@ -39,7 +40,7 @@ test_mode_switch = html.Div(
 
 ### LES FIGURES ###
 fig = go.Figure()
-# fig2 = go.Figure()
+fig_graph = go.Figure()
 
 
 ### LES BOUTONS ###
@@ -84,7 +85,6 @@ strat_backtest = dcc.Dropdown(
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
-message_wallet = html.Div(id='message-wallet', children='No Wallet', style={"position": "absolute", "top": "350px", "left": "500px"})
 
 #trading_logic = create_trading_logic()
 
@@ -97,6 +97,17 @@ app.layout = dbc.Container(
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
             ],
+        ),
+        dbc.Container(
+            [
+                 dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
+                            ],
+                            width=10,
+                            style={"position": "relative", "top": "500px", "left": "100px"},
+                        ),
+            ]
         ),
         dbc.Container( # PARTIE ANALYSE
             [
@@ -140,7 +151,6 @@ app.layout = dbc.Container(
                     [
                         selected_message,
                         message_bis,
-                        message_wallet
                     ],
                 ),
             ],id="Live1",
@@ -179,12 +189,18 @@ def trade(n_clicks_trade, n_clicks_stop, previous_message):
         return previous_message
     
 @app.callback(
-    Output('message-wallet', 'children'),
+    Output("graph-wallet", "figure"),
     [Input('wallet-button', 'n_clicks')]
 )
 def print_wallet(n_clicks):
     if n_clicks is not None:
-        return "Wallet"
+        def plotAccountInfo(df_account):
+            fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+            return fig
+        #return str(api.getInfoAccount())
+        df_account = api.getInfoAccount()
+        fig_graph = plotAccountInfo(df_account)
+        return fig_graph
     
 @callback( #Output("graph2", "figure")
     [Output("graph", "figure"),
