@@ -27,12 +27,14 @@ def SimpleSMALive(pair, timeframe, sma):
         df = getOHLCV(pair, timeframe, limit=sma+1)
 
     df = pd.concat([df, getOHLCV(pair, timeframe, limit=1)], ignore_index=True)
-    print(df["Close"])
+    # print(df)
+    df = df.drop_duplicates(subset=['Timestamp'], keep='last')
 
+    # print(df)
     df['SMA'] = df['Close'].rolling(sma).mean()
     
     last_value = df['Close'].iloc[-1]
-    last_sma = df['SMA'].iloc[-1]
+    last_sma = df['SMA'].iloc[-2]
     print(f"SMA {last_sma} CLose {last_value}")
     # print(df)
     if last_sma is None:
