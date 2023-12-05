@@ -78,7 +78,7 @@ strat_backtest = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-backtest-dropdown',
+                            ],value='SimpleSMA',id='strat-backtest-dropdown',
                     )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})

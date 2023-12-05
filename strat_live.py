@@ -17,7 +17,7 @@ def start_trade(trading_logic, pair, strategy):
     print("Live trading is running")
     while not trading_logic['stop_flag']:
         # print("Live trading is running")
-        if strategy == 'SimpleSMA':
+        if strategy == 'SimpleSMA': #Probablement une zone a améliorer elle est check a chques fois
             print("SimpleSMA")
             result = SimpleSMALive(pair, "5m", 10) 
         elif strategy == 'Stratégie 2':
