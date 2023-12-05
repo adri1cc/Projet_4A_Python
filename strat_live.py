@@ -30,10 +30,10 @@ def start_trade(trading_logic, pair, strategy):
 
             if  result=="buy":
                 quantity_buy = getQuantity(pair,"buy")
-
-                if quantity_buy>2:
+                investment=getInvestment(quantity_buy,100)
+                if investment>6:
                     print("lunch buy order")
-                    getInvestment(quantity_buy,100)
+                    
                     #place_order(pair, "buy", 6, "market")
                     live_trade = True
 
