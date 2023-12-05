@@ -20,6 +20,8 @@ def start_trade(trading_logic):
 def stop_trade(trading_logic):
     trading_logic['stop_flag'] = True
 
+# TODO extraire la stratégie de la onction suivante,
+# TODO 
 def SimpleSMALive(pair, timeframe, sma):
     global df
     global live_trade
