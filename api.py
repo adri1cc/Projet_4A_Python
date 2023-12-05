@@ -19,7 +19,7 @@ mexc_futures = ccxt.mexc({
     "options": {'defaultType': 'swap' } # Défini comppte FUTURES
 })
 
-binance_testnet = ccxt.binance({
+"""binance_testnet = ccxt.binance({
     'apiKey': dc.API_KEY_BINANCE,
     'secret': dc.API_SECRET_BINANCE,
     'enableRateLimit': True,  # Activer la limite de taux si nécessaire
@@ -29,7 +29,7 @@ coinbase_testnet = ccxt.coinbase({
     'apiKey': dc.API_KEY_COINBASE,
     'secret': dc.API_SECRET_COINBASE,
     'enableRateLimit': True,  # Activer la limite de taux si nécessaire
-})
+})"""
 
 exchange = mexc # Choix de l'exchange sur lequel les opérations sont éffectuées
 #exchange.set_sandbox_mode(True)  # enable sandbox mode
