@@ -29,9 +29,11 @@ def start_trade(trading_logic, pair, strategy):
             print("live_trade false")
 
             if  result=="buy":
+                quantity_buy = getQuantity(pair,"buy")
 
-                if getQuantity(pair,"buy")>0:
+                if quantity_buy>2:
                     print("lunch buy order")
+                    getInvestment(quantity_buy,100)
                     #place_order(pair, "buy", 6, "market")
                     live_trade = True
 
@@ -39,7 +41,9 @@ def start_trade(trading_logic, pair, strategy):
                     print("Not enought founds") 
 
         elif result=="sell":
-            if getQuantity(pair,"sell")>0:
+            quantity_sell = getQuantity(pair,"sell")
+
+            if quantity_sell>0:
                 print("lunch sell order")
                 #place_order(pair, "sell", 6, "market")
                 live_trade = False
@@ -52,6 +56,14 @@ def stop_trade(trading_logic):
     global df
     trading_logic['stop_flag'] = True
     df = None
+
+def getInvestment(quantity, percent):
+    investment = quantity*percent/100
+    print(investment)
+    if investment<6:
+        investment=6
+    print(investment)
+    return investment
 
 def SimpleSMALive(pair, timeframe, sma):
     global df
