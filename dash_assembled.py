@@ -156,14 +156,16 @@ app.layout = dbc.Container(
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
-     Input('stop-trade-button', 'n_clicks')],
+     Input('stop-trade-button', 'n_clicks'),
+     Input('strat-dropdown', 'value'),
+     Input('pair-dropdown', 'value'),],
     [State('message-bis', 'children')]
 )
-def trade(n_clicks_trade, n_clicks_stop, previous_message):
+def trade(n_clicks_trade, n_clicks_stop,strat_live,pair_live, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic)
+        start_trade(trading_logic, pair_live)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop

@@ -125,7 +125,7 @@ def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profi
 
 def getQuantity(pair, side):
     balance = getInfoAccount()
-    print(balance['Currency'])
+    # print(balance['Currency'])
     quantity = 0 
 
     base_currency, quote_currency = pair.split("/")

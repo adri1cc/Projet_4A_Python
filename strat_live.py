@@ -10,21 +10,45 @@ live_trade = False
 def create_trading_logic():
     return {'stop_flag': False}
 
-def start_trade(trading_logic):
+# TODO add pair and strategy
+def start_trade(trading_logic, pair):
+    global live_trade
     while not trading_logic['stop_flag']:
         print("Live trading is running")
-        SimpleSMALive("BTC/USDT","5m",5)
-        #time.sleep(2)
+           
+        result = SimpleSMALive(pair, "5m", 10) 
+        #TODO a ajouter les possibilités de plusieurs stratégies (switch case)
+        
+        if live_trade is False:
+            # print("live_trade false")
+
+            if  result=="buy":
+
+                if getQuantity(pair,"buy")>0:
+                    print("lunch buy order")
+                    #place_order(pair, "buy", 6, "market")
+                    live_trade = True
+
+                else:
+                    print("Not enought founds") 
+
+        elif result=="sell":
+            if getQuantity(pair,"sell")>0:
+                print("lunch sell order")
+                #place_order(pair, "sell", 6, "market")
+                live_trade = False
+            else:
+                print("Not enought founds")
     print("Live trading is stopped")
+    return
 
 def stop_trade(trading_logic):
+    global df
     trading_logic['stop_flag'] = True
+    df = None
 
-# TODO extraire la stratégie de la onction suivante,
-# TODO 
 def SimpleSMALive(pair, timeframe, sma):
     global df
-    global live_trade
     if df is None:
         df = getOHLCV(pair, timeframe, limit=sma+1)
 
@@ -37,34 +61,19 @@ def SimpleSMALive(pair, timeframe, sma):
     
     last_value = df['Close'].iloc[-1]
     last_sma = df['SMA'].iloc[-2]
-    print(f"SMA {last_sma} CLose {last_value}")
+    # print(f"SMA {last_sma} CLose {last_value}")
     # print(df)
     if last_sma is None:
         print("last sma null")
-        return
-    
-    if live_trade is False:
-        print("live_trade false")
+        return 0
 
-        if  last_value > last_sma:
-
-            if getQuantity(pair,"buy")>0:
-                print("lunch buy order")
-                #place_order(pair, "buy", 6, "market")
-                live_trade = True
-
-            else:
-                print("Not enought founds") 
+    if  last_value > last_sma:
+        return "buy"
 
     elif last_value < last_sma:
-        if getQuantity(pair,"sell")>0:
-                print("lunch sell order")
-                #place_order(pair, "sell", 6, "market")
-                live_trade = False
+        return "sell"
 
-    return 
+    return 0
 
 last_value = 0
 last_sma =0
-
-# SimpleSMALive("BTC/USDT", "5m", 10)
