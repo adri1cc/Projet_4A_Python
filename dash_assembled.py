@@ -55,15 +55,15 @@ pair = dcc.Dropdown(
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='Paire',id='pair-dropdown',
+                            ],value='BTC/USDT',id='pair-dropdown',
                     )
 
 strat = dcc.Dropdown(
                     options=[
-                        {'label': 'Stratégie 1', 'value': 'Stratégie 1'},
+                        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-dropdown',
+                            ],value='SimpleSMA',id='strat-dropdown',
                     )
 pair_backtest = dcc.Dropdown(
                     options=[
@@ -165,7 +165,7 @@ def trade(n_clicks_trade, n_clicks_stop,strat_live,pair_live, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic, pair_live)
+        start_trade(trading_logic, pair_live, strat_live)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop

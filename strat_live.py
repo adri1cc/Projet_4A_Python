@@ -6,21 +6,27 @@ import pandas as pd
 
 df = None
 live_trade = False
+result = None
 
 def create_trading_logic():
     return {'stop_flag': False}
 
-# TODO add pair and strategy
-def start_trade(trading_logic, pair):
+def start_trade(trading_logic, pair, strategy):
     global live_trade
+    global result
+    print("Live trading is running")
     while not trading_logic['stop_flag']:
-        print("Live trading is running")
-           
-        result = SimpleSMALive(pair, "5m", 10) 
-        #TODO a ajouter les possibilités de plusieurs stratégies (switch case)
+        # print("Live trading is running")
+        if strategy == 'SimpleSMA':
+            print("SimpleSMA")
+            result = SimpleSMALive(pair, "5m", 10) 
+        elif strategy == 'Stratégie 2':
+            print("Startégie 2 is not implemented")
+        elif strategy == 'Stratégie 3':
+            print("Startégie 3 is not implemented")
         
         if live_trade is False:
-            # print("live_trade false")
+            print("live_trade false")
 
             if  result=="buy":
 
