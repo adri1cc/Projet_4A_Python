@@ -47,6 +47,7 @@ trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color=
 stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
 previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
+wallet_button =  dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="success",size="lg")
 
 ### LES LISTES DEROULANTES ###
 
@@ -83,6 +84,7 @@ strat_backtest = dcc.Dropdown(
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
+message_wallet = html.Div(id='message-wallet', children='No Wallet', style={"position": "absolute", "top": "350px", "left": "500px"})
 
 #trading_logic = create_trading_logic()
 
@@ -138,6 +140,7 @@ app.layout = dbc.Container(
                     [
                         selected_message,
                         message_bis,
+                        message_wallet
                     ],
                 ),
             ],id="Live1",
@@ -148,6 +151,8 @@ app.layout = dbc.Container(
     className="d-grid gap-2 d-md-block",),
                 html.Div([stop_trade_button], style={"position": "absolute", "top": "350px", "left": "250px"},
     className="d-grid gap-2 d-md-block",),
+                html.Div([wallet_button], style={"position": "absolute", "top": "450px", "left": "250px"},
+    className="d-grid gap-2 d-md-block",),
             ],id="Live2",
         ),
     ]
@@ -157,7 +162,7 @@ app.layout = dbc.Container(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
      Input('stop-trade-button', 'n_clicks')],
-    [State('message-bis', 'children')]
+    [State('message-bis', 'children'),]
 )
 def trade(n_clicks_trade, n_clicks_stop, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
@@ -173,11 +178,19 @@ def trade(n_clicks_trade, n_clicks_stop, previous_message):
         # No button clicks
         return previous_message
     
+@app.callback(
+    Output('message-wallet', 'children'),
+    [Input('wallet-button', 'n_clicks')]
+)
+def print_wallet(n_clicks):
+    if n_clicks is not None:
+        return "Wallet"
+    
 @callback( #Output("graph2", "figure")
     [Output("graph", "figure"),
      ],
     [Input("color-mode-switch", "value"),
-     Input('strat-backtest-dropdown', 'value'),
+     Input('strat-backtest-dropdown', 'value'), # if value == SimpleSMA... else if value == ...
      Input('pair-backtest-dropdown', 'value'),
      Input("backtest-button", "n_clicks"),
      Input('slider', 'value')],
