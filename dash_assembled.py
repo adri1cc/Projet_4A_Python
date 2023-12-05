@@ -84,7 +84,7 @@ strat_backtest = dcc.Dropdown(
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
-message_wallet = html.Div(id='message-wallet', children='No wallet', style={"position": "absolute", "top": "350px", "left": "500px"})
+message_wallet = html.Div(id='message-wallet', children='No Wallet', style={"position": "absolute", "top": "350px", "left": "500px"})
 
 #trading_logic = create_trading_logic()
 
@@ -159,12 +159,12 @@ app.layout = dbc.Container(
 )
 # Définir la fonction de callback
 @app.callback(
-    [Output('message-bis', 'children')],
+    Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
      Input('stop-trade-button', 'n_clicks')],
     [State('message-bis', 'children'),]
 )
-def trade(n_clicks_trade, n_clicks_stop, wallet_click, previous_message, prev_message_wallet):
+def trade(n_clicks_trade, n_clicks_stop, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
@@ -179,13 +179,12 @@ def trade(n_clicks_trade, n_clicks_stop, wallet_click, previous_message, prev_me
         return previous_message
     
 @app.callback(
-    [Output('message-wallet', 'children')],
-    [Input('wallet-button', 'n_clicks')],
-    [State('message-wallet', 'children')]
+    Output('message-wallet', 'children'),
+    [Input('wallet-button', 'n_clicks')]
 )
-def print_wallet(wallet_clicks, previous_message):
-    if wallet_clicks is not None:
-        return 'Wallet'
+def print_wallet(n_clicks):
+    if n_clicks is not None:
+        return "Wallet"
     
 @callback( #Output("graph2", "figure")
     [Output("graph", "figure"),
