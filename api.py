@@ -92,7 +92,7 @@ def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None
     except Exception as e:
         print('Une erreur s\'est produite : ', type(e).__name__, str(e))
 
-def place_order(symbol, direction, leverage, stop_loss, take_profit, investment_value, limit_price):
+def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profit=None, investment_value=None, limit_price=None):
 
     # Direction : long or short
     
@@ -122,4 +122,31 @@ def place_order(symbol, direction, leverage, stop_loss, take_profit, investment_
         print('An error occurred: ', type(e).__name__, str(e))
     return 
 
+
+def getQuantity(pair, side):
+    balance = getInfoAccount()
+    print(balance['Currency'])
+    quantity = 0 
+
+    base_currency, quote_currency = pair.split("/")
+    
+    if side == "sell":
+
+        if base_currency not in balance['Currency'].values:
+            print(f"{base_currency} not found in the balance.")
+            return 0
+        
+        quantity = balance['Free'][balance['Currency'] == base_currency].values[0]
+        print(f"Quantity of {base_currency} for {side}: {quantity}")
+
+    elif side == "buy":
+
+        if quote_currency not in balance['Currency'].values:
+            print(f"{quote_currency} not found in the balance.")
+            return 0
+        
+        quantity = balance['Free'][balance['Currency'] == quote_currency].values[0]
+        print(f"Quantity of {quote_currency} for {side}: {quantity}")
+
+    return quantity
 
