@@ -66,6 +66,7 @@ def getInfoAccount():
     
 def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None):
     
+    print("Récupération des données...")
     # Récupérer les bougies
     try:
         candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
@@ -81,7 +82,7 @@ def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None
         # Créer un DataFrame pandas
         columns = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
         df = pd.DataFrame(candle_data, columns=columns)
-
+        print("Données récupérerées")
         # Afficher le DataFrame
         return df
 
