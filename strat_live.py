@@ -4,15 +4,12 @@ from api import *
 import pandas as pd
 from strategies import SimpleSMALive
 
-df = None
-live_trade = False
 result = None
 
 def create_trading_logic():
     return {'stop_flag': False}
 
 def start_trade(trading_logic, pair, strategy):
-    global live_trade
     global result
     sma = SimpleSMALive(pair, "5m", 10) 
     print("Live trading is running")
@@ -55,9 +52,7 @@ def start_trade(trading_logic, pair, strategy):
     return
 
 def stop_trade(trading_logic):
-    global df
     trading_logic['stop_flag'] = True
-    df = None
 
 def getInvestment(quantity, percent):
     investment = quantity*percent/100
@@ -66,34 +61,3 @@ def getInvestment(quantity, percent):
         investment=6
     # print(investment)
     return investment
-
-# def SimpleSMALive(pair, timeframe, sma):
-#     global df
-#     if df is None:
-#         df = getOHLCV(pair, timeframe, limit=sma+1)
-
-#     df = pd.concat([df, getOHLCV(pair, timeframe, limit=1)], ignore_index=True)
-#     # print(df)
-#     df = df.drop_duplicates(subset=['Timestamp'], keep='last')
-
-#     # print(df)
-#     df['SMA'] = df['Close'].rolling(sma).mean()
-    
-#     last_value = df['Close'].iloc[-1]
-#     last_sma = df['SMA'].iloc[-2]
-#     # print(f"SMA {last_sma} CLose {last_value}")
-#     # print(df)
-#     if last_sma is None:
-#         print("last sma null")
-#         return 0
-
-#     if  last_value > last_sma:
-#         return "buy"
-
-#     elif last_value < last_sma:
-#         return "sell"
-
-#     return 0
-
-last_value = 0
-last_sma =0
