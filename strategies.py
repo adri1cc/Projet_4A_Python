@@ -2,7 +2,7 @@ from pyalgotrade import strategy
 from pyalgotrade.technical import ma
 from pyalgotrade.technical import cross
 import pandas as pd
-from api import *
+import api
 
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
@@ -14,19 +14,18 @@ class SimpleSMALive:
         self.__portfolio_values = []  # List to store portfolio values
         self.__last_portfolio_value = None  # To keep track of the last portfolio value
 
-    def get_ohlcv(self, limit=1):
-        return getOHLCV(self.__pair, self.__timeframe, limit)
-
     def calculate_sma_signal(self):
         if self.__df is None:
-            self.__df = self.get_ohlcv(limit=self.__sma + 1)
-
-        new_data = self.get_ohlcv(limit=1)
+            self.__df = api.getOHLCV(self.__pair, self.__timeframe, limit=self.__sma + 1)
+        print(self.__df)
+        new_data = api.getOHLCV(self.__pair, self.__timeframe,limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
         self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
 
         self.__df['SMA'] = self.__df['Close'].rolling(self.__sma).mean()
-
+        if self.__df is None or len(self.__df) == 0:
+            print("DataFrame is empty or None.")
+            return 0
         last_value = self.__df['Close'].iloc[-1]
         last_sma = self.__df['SMA'].iloc[-2]
 
@@ -41,6 +40,8 @@ class SimpleSMALive:
             return "sell"
 
         return 0
+    def __del__(self):
+        return
 
 class SimpleSMA(strategy.BacktestingStrategy):
     def __init__(self, feed, instrument, smaPeriod, portfolio):

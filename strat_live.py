@@ -2,7 +2,7 @@ from pickletools import long1
 import time
 from api import *
 import pandas as pd
-
+from strategies import SimpleSMALive
 
 df = None
 live_trade = False
@@ -14,19 +14,20 @@ def create_trading_logic():
 def start_trade(trading_logic, pair, strategy):
     global live_trade
     global result
+    sma = SimpleSMALive(pair, "5m", 10) 
     print("Live trading is running")
     while not trading_logic['stop_flag']:
         # print("Live trading is running")
         if strategy == 'SimpleSMA': #Probablement une zone a améliorer elle est check a chques fois
-            print("SimpleSMA")
-            result = SimpleSMALive(pair, "5m", 10) 
+            # print("SimpleSMA")
+            result = sma.calculate_sma_signal()
         elif strategy == 'Stratégie 2':
             print("Startégie 2 is not implemented")
         elif strategy == 'Stratégie 3':
             print("Startégie 3 is not implemented")
         
         if live_trade is False:
-            print("live_trade false")
+            # print("live_trade false")
 
             if  result=="buy":
                 quantity_buy = getQuantity(pair,"buy")
@@ -50,6 +51,7 @@ def start_trade(trading_logic, pair, strategy):
             else:
                 print("Not enought founds")
     print("Live trading is stopped")
+    del sma
     return
 
 def stop_trade(trading_logic):
@@ -59,39 +61,39 @@ def stop_trade(trading_logic):
 
 def getInvestment(quantity, percent):
     investment = quantity*percent/100
-    print(investment)
+    # print(investment)
     if investment<6:
         investment=6
-    print(investment)
+    # print(investment)
     return investment
 
-def SimpleSMALive(pair, timeframe, sma):
-    global df
-    if df is None:
-        df = getOHLCV(pair, timeframe, limit=sma+1)
+# def SimpleSMALive(pair, timeframe, sma):
+#     global df
+#     if df is None:
+#         df = getOHLCV(pair, timeframe, limit=sma+1)
 
-    df = pd.concat([df, getOHLCV(pair, timeframe, limit=1)], ignore_index=True)
-    # print(df)
-    df = df.drop_duplicates(subset=['Timestamp'], keep='last')
+#     df = pd.concat([df, getOHLCV(pair, timeframe, limit=1)], ignore_index=True)
+#     # print(df)
+#     df = df.drop_duplicates(subset=['Timestamp'], keep='last')
 
-    # print(df)
-    df['SMA'] = df['Close'].rolling(sma).mean()
+#     # print(df)
+#     df['SMA'] = df['Close'].rolling(sma).mean()
     
-    last_value = df['Close'].iloc[-1]
-    last_sma = df['SMA'].iloc[-2]
-    # print(f"SMA {last_sma} CLose {last_value}")
-    # print(df)
-    if last_sma is None:
-        print("last sma null")
-        return 0
+#     last_value = df['Close'].iloc[-1]
+#     last_sma = df['SMA'].iloc[-2]
+#     # print(f"SMA {last_sma} CLose {last_value}")
+#     # print(df)
+#     if last_sma is None:
+#         print("last sma null")
+#         return 0
 
-    if  last_value > last_sma:
-        return "buy"
+#     if  last_value > last_sma:
+#         return "buy"
 
-    elif last_value < last_sma:
-        return "sell"
+#     elif last_value < last_sma:
+#         return "sell"
 
-    return 0
+#     return 0
 
 last_value = 0
 last_sma =0
