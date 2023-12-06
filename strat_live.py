@@ -25,10 +25,11 @@ def start_trade(trading_logic, pair, strategy):
         
         if sma.getLiveTrade() is False:
             # print("live_trade false")
+            sma.backtest()
 
             if  result=="buy":
                 quantity_buy = getQuantity(pair,"buy")
-                investment=getInvestment(quantity_buy,100)
+                investment=getInvestment(quantity_buy,100)#TODO mettre le pourcentage de risque en parametre
                 if investment>6:
                     print("lunch buy order")
                     

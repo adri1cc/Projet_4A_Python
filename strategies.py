@@ -17,11 +17,46 @@ class SimpleSMALive:
         self.__liveTrade = side
     def getLiveTrade(self):
         return self.__liveTrade
+    def backtest(self):
+        print("backtest")
+        # Reset portfolio values for a new backtest
+        self.__portfolio_values = []
+
+        # Load historical data for backtesting
+        historical_data = api.getOHLCV(self.__pair, self.__timeframe, limit=500)#TODO creer une fonction qui récupere beaucoup de données sur la paire
+        self.__df = historical_data.copy()
+
+        for i in range(self.__sma, len(historical_data)):
+            # Simulate receiving live data
+            new_data = historical_data.iloc[i:i+1]
+            self.__df = pd.concat([self.__df, new_data], ignore_index=True)
+
+            # Calculate SMA signal
+            signal = self.calculate_sma_signal()
+
+            # Execute trades based on the signal (for simplicity, assuming constant position size)
+            if signal == "buy" and not self.__liveTrade:
+                self.setLiveTrade(True)
+                self.__last_portfolio_value = new_data['Close'].values[0]
+            elif signal == "sell" and self.__liveTrade:
+                self.setLiveTrade(False)
+                self.__portfolio_values.append(self.__last_portfolio_value / new_data['Close'].values[0])
+
+        # Calculate final portfolio value
+        final_portfolio_value = self.__last_portfolio_value if self.__liveTrade else historical_data['Close'].iloc[-1]
+        self.__portfolio_values.append(final_portfolio_value / historical_data['Close'].iloc[-1])
+
+        # Print or return performance metrics
+        print("Backtest complete. Performance metrics:")
+        print(f"Initial Portfolio Value: {historical_data['Close'].iloc[0]}")
+        print(f"Final Portfolio Value: {final_portfolio_value}")
+        print(f"Portfolio Return: {100 * (final_portfolio_value / historical_data['Close'].iloc[0] - 1):.2f}%")
+
 
     def calculate_sma_signal(self):
         if self.__df is None:
             self.__df = api.getOHLCV(self.__pair, self.__timeframe, limit=self.__sma + 1)
-        print(self.__df)
+        # print(self.__df)
         new_data = api.getOHLCV(self.__pair, self.__timeframe,limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
         self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
