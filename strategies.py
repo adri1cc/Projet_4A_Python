@@ -13,6 +13,10 @@ class SimpleSMALive:
         self.__liveTrade = False
         self.__portfolio_values = []  # List to store portfolio values
         self.__last_portfolio_value = None  # To keep track of the last portfolio value
+    def setLiveTrade(self, side):
+        self.__liveTrade = side
+    def getLiveTrade(self):
+        return self.__liveTrade
 
     def calculate_sma_signal(self):
         if self.__df is None:

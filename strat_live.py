@@ -26,7 +26,7 @@ def start_trade(trading_logic, pair, strategy):
         elif strategy == 'Stratégie 3':
             print("Startégie 3 is not implemented")
         
-        if live_trade is False:
+        if sma.getLiveTrade() is False:
             # print("live_trade false")
 
             if  result=="buy":
@@ -36,7 +36,7 @@ def start_trade(trading_logic, pair, strategy):
                     print("lunch buy order")
                     
                     #place_order(pair, "buy", 6, "market")
-                    live_trade = True
+                    sma.setLiveTrade(True)
 
                 else:
                     print("Not enought founds") 
@@ -47,7 +47,7 @@ def start_trade(trading_logic, pair, strategy):
             if quantity_sell>0:
                 print("lunch sell order")
                 #place_order(pair, "sell", 6, "market")
-                live_trade = False
+                sma.setLiveTrade(False)
             else:
                 print("Not enought founds")
     print("Live trading is stopped")
