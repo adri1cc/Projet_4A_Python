@@ -182,26 +182,34 @@ def trade(n_clicks_trade, n_clicks_stop, previous_message):
     else:
         # No button clicks
         return previous_message
-    
+
 @app.callback(
-    [Output("graph-wallet", "figure"),
-    Output("graph-wallet", "style")],
+    Output("graph-wallet", "figure"),
+    Output("graph-wallet", "style"),
     [Input("color-mode-switch", "value"),
      Input('wallet-button', 'n_clicks')],
+    [Input("graph-wallet", "style")],
 )
-def print_wallet(switch_on, n_clicks):
+def print_wallet(switch_on, n_clicks, current_style):
     global fig_graph
 
-    if n_clicks is not None and n_clicks > 0:
-        df_account = api.getInfoAccount()
-        fig_graph = plotAccountInfo(df_account)
-        style = {"display": "block"}
+    style = current_style or {"display": "none"}  # Set a default value for current_style
+
+    if n_clicks is not None and n_clicks % 2 == 1:
+        # Button clicked, toggle visibility
+        if style == {"display": "none"}:
+            style = {"display": "block"}
+        else:
+             style["display"] = "none"
+        if style["display"] == "block":
+            # Update the graph only when making it visible
+            df_account = api.getInfoAccount()
+            fig_graph = plotAccountInfo(df_account)
+            template = "minty" if switch_on else "minty_dark"
+            fig_graph.update_layout(template=template)
     else:
-       fig_graph = go.Figure()
-       style = {"display": "none"}
-    
-    template = "minty" if switch_on else "minty_dark"
-    fig_graph.update_layout(template=template)
+        # No button click or even number of clicks, keep the current visibility
+        style = current_style or {"display": "none"}
 
     return fig_graph, style
 
