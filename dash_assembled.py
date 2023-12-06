@@ -5,8 +5,7 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
-import api
-#from strat_live import *
+from strat_live import *
 
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
@@ -46,9 +45,9 @@ fig_graph = go.Figure()
 ### LES BOUTONS ###
 trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
 stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
+wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
 previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
-wallet_button =  dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="success",size="lg")
 
 ### LES LISTES DEROULANTES ###
 
@@ -86,7 +85,7 @@ strat_backtest = dcc.Dropdown(
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 
-#trading_logic = create_trading_logic()
+trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
@@ -97,17 +96,6 @@ app.layout = dbc.Container(
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
             ],
-        ),
-        dbc.Container(
-            [
-                 dbc.Col(
-                            [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
-                            ],
-                            width=10,
-                            style={"position": "relative", "top": "500px", "left": "100px"},
-                        ),
-            ]
         ),
         dbc.Container( # PARTIE ANALYSE
             [
@@ -139,8 +127,15 @@ app.layout = dbc.Container(
             ],
             className="mt-4",id="Analyse",  # Adjust margin-top as necessary
         ),
-        dbc.Container(
-            [
+        dbc.Container( #PARTIE LIVE
+            [   
+                dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
+                            ],
+                            width=10,
+                            style={"position": "relative", "top": "500px", "left": "100px"},
+                        ),
                 dbc.Row(
                     [
                         dbc.Col(pair, style={"position": "absolute", "top": "200px", "left": "500px"}, width=2),
@@ -172,7 +167,7 @@ app.layout = dbc.Container(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
      Input('stop-trade-button', 'n_clicks')],
-    [State('message-bis', 'children'),]
+    [State('message-bis', 'children')]
 )
 def trade(n_clicks_trade, n_clicks_stop, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
@@ -187,26 +182,45 @@ def trade(n_clicks_trade, n_clicks_stop, previous_message):
     else:
         # No button clicks
         return previous_message
-    
+
 @app.callback(
     Output("graph-wallet", "figure"),
-    [Input('wallet-button', 'n_clicks')]
-)
-def print_wallet(n_clicks):
-    if n_clicks is not None:
-        def plotAccountInfo(df_account):
-            fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-            return fig
-        #return str(api.getInfoAccount())
-        df_account = api.getInfoAccount()
-        fig_graph = plotAccountInfo(df_account)
-        return fig_graph
-    
-@callback( #Output("graph2", "figure")
-    [Output("graph", "figure"),
-     ],
+    Output("graph-wallet", "style"),
     [Input("color-mode-switch", "value"),
-     Input('strat-backtest-dropdown', 'value'), # if value == SimpleSMA... else if value == ...
+     Input('wallet-button', 'n_clicks')],
+    [Input("graph-wallet", "style")],
+)
+def print_wallet(switch_on, n_clicks, current_style):
+    global fig_graph
+
+    style = current_style or {"display": "none"}  # Set a default value for current_style
+
+    if n_clicks is not None and n_clicks % 2 == 1:
+        # Button clicked, toggle visibility
+        if style == {"display": "none"}:
+            style = {"display": "block"}
+        else:
+             style["display"] = "none"
+        if style["display"] == "block":
+            # Update the graph only when making it visible
+            df_account = api.getInfoAccount()
+            fig_graph = plotAccountInfo(df_account)
+            template = "minty" if switch_on else "minty_dark"
+            fig_graph.update_layout(template=template)
+    else:
+        # No button click or even number of clicks, keep the current visibility
+        style = current_style or {"display": "none"}
+
+    return fig_graph, style
+
+def plotAccountInfo(df_account):
+    fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+    return fig
+
+@callback( #Output("graph2", "figure")
+    [Output("graph", "figure"),],
+    [Input("color-mode-switch", "value"),
+     Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
      Input("backtest-button", "n_clicks"),
      Input('slider', 'value')],
@@ -221,7 +235,6 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
-    # fig2.update_layout(template=template)
 
     return [fig] #,fig2
 
