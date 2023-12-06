@@ -98,17 +98,6 @@ app.layout = dbc.Container(
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
             ],
         ),
-        dbc.Container(
-            [
-                 dbc.Col(
-                            [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
-                            ],
-                            width=10,
-                            style={"position": "relative", "top": "500px", "left": "100px"},
-                        ),
-            ]
-        ),
         dbc.Container( # PARTIE ANALYSE
             [
                 dbc.Row(
@@ -139,8 +128,15 @@ app.layout = dbc.Container(
             ],
             className="mt-4",id="Analyse",  # Adjust margin-top as necessary
         ),
-        dbc.Container(
-            [
+        dbc.Container( #PARTIE LIVE
+            [   
+                dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
+                            ],
+                            width=10,
+                            style={"position": "relative", "top": "500px", "left": "100px"},
+                        ),
                 dbc.Row(
                     [
                         dbc.Col(pair, style={"position": "absolute", "top": "200px", "left": "500px"}, width=2),
@@ -190,21 +186,29 @@ def trade(n_clicks_trade, n_clicks_stop, previous_message):
     
 @app.callback(
     Output("graph-wallet", "figure"),
-    [Input('wallet-button', 'n_clicks')]
+    [Input("color-mode-switch", "value"),
+     Input('wallet-button', 'n_clicks')],
 )
-def print_wallet(n_clicks):
+def print_wallet(switch_on, n_clicks):
+    global fig_graph
+
     if n_clicks is not None:
-        def plotAccountInfo(df_account):
-            fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-            return fig
-        #return str(api.getInfoAccount())
         df_account = api.getInfoAccount()
         fig_graph = plotAccountInfo(df_account)
-        return fig_graph
+    else:
+        fig_graph = go.Figure()
     
+    template = "minty" if switch_on else "minty_dark"
+    fig_graph.update_layout(template=template)
+
+    return fig_graph
+
+def plotAccountInfo(df_account):
+    fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+    return fig
+
 @callback( #Output("graph2", "figure")
-    [Output("graph", "figure"),
-     ],
+    [Output("graph", "figure"),],
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'), # if value == SimpleSMA... else if value == ...
      Input('pair-backtest-dropdown', 'value'),
@@ -221,7 +225,6 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
-    # fig2.update_layout(template=template)
 
     return [fig] #,fig2
 
