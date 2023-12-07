@@ -5,6 +5,9 @@ import pandas as pd
 import api
 import backtest
 import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.express as px
 
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
@@ -64,7 +67,6 @@ class SimpleSMALive:
                     round(difference_de_prix, 2)
                 ))
 
-
                 # Mettre à jour la valeur initiale du portefeuille
                 # initial_portfolio_value = valeur_apres_vente
             # Print portfolio value after each iteration
@@ -80,6 +82,28 @@ class SimpleSMALive:
         print(f"Final Portfolio Value: {self.__last_portfolio_value}")
         print(f"Portfolio Return: {100 * (self.__last_portfolio_value / initial_portfolio_value - 1):.2f}%")
         print("Cumulative Portfolio Values Over Time:", self.__portfolio_values)
+        
+    def plot_figure(self):
+                # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
+        prix, portfolio_values, changes = zip(*self.__portfolio_values)
+        dates = self.__df["Timestamp"]
+        # print(dates)
+
+        # Créez une figure avec deux sous-graphiques (un pour les valeurs du portefeuille, un pour les variations)
+        fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+        fig.add_trace(go.Candlestick(x=df['Index'],
+                    open=self.__df['Open'],
+                    high=self.__df['High'],
+                    low=self.__df['Low'],
+                    close=self.__df['Close'],
+                    name=f'{self.__pair} Candlestick'),
+                    row=1, col=1)
+        fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
+        fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=3, col=1)
+        title = 'Backtest '+ self.__pair
+        fig.update_layout(title_text=title, showlegend=True)
+        fig.update_layout(xaxis_rangeslider_visible=False)
+        return fig
 
     def calculate_portfolio_value(self, initial_portfolio_value):
         # Calculate cumulative portfolio value based on the performance values recorded during backtest
