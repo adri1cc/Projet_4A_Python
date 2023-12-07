@@ -3,6 +3,8 @@ from pyalgotrade.technical import ma
 from pyalgotrade.technical import cross
 import pandas as pd
 import api
+import backtest
+import numpy as np
 
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
@@ -12,19 +14,24 @@ class SimpleSMALive:
         self.__df = None
         self.__liveTrade = False
         self.__portfolio_values = []  # List to store portfolio values
-        self.__last_portfolio_value = None  # To keep track of the last portfolio value
+        self.__last_portfolio_value = 1000  # To keep track of the last portfolio value
     def setLiveTrade(self, side):
         self.__liveTrade = side
     def getLiveTrade(self):
         return self.__liveTrade
     def backtest(self):
-        print("backtest")
+        print("Calcul backtest ...")
         # Reset portfolio values for a new backtest
         self.__portfolio_values = []
 
         # Load historical data for backtesting
-        historical_data = api.getOHLCV(self.__pair, self.__timeframe, limit=500)#TODO creer une fonction qui récupere beaucoup de données sur la paire
+        historical_data = backtest.getData(self.__pair, self.__timeframe)
         self.__df = historical_data.copy()
+
+            # Print initial portfolio value
+        initial_portfolio_value = 1000
+        self.__last_portfolio_value = initial_portfolio_value
+        print(f"Initial Portfolio Value: {initial_portfolio_value}")
 
         for i in range(self.__sma, len(historical_data)):
             # Simulate receiving live data
@@ -32,39 +39,81 @@ class SimpleSMALive:
             self.__df = pd.concat([self.__df, new_data], ignore_index=True)
 
             # Calculate SMA signal
-            signal = self.calculate_sma_signal()
+            self.calculate_sma()
+            signal = self.generate_signal()
 
             # Execute trades based on the signal (for simplicity, assuming constant position size)
             if signal == "buy" and not self.__liveTrade:
                 self.setLiveTrade(True)
-                self.__last_portfolio_value = new_data['Close'].values[0]
+                # Enregistrer le prix d'achat
+                prix_achat = new_data['Close'].values[0]
+                # ... votre logique d'achat ici ...
+
             elif signal == "sell" and self.__liveTrade:
                 self.setLiveTrade(False)
-                self.__portfolio_values.append(self.__last_portfolio_value / new_data['Close'].values[0])
 
-        # Calculate final portfolio value
-        final_portfolio_value = self.__last_portfolio_value if self.__liveTrade else historical_data['Close'].iloc[-1]
-        self.__portfolio_values.append(final_portfolio_value / historical_data['Close'].iloc[-1])
+                # Calculer la différence de prix entre l'achat et la vente
+                difference_de_prix = new_data['Close'].values[0] - prix_achat
 
+                # Enregistrer la valeur actuelle du portefeuille après la vente
+                valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value*difference_de_prix/prix_achat
+                self.__last_portfolio_value=valeur_apres_vente
+                self.__portfolio_values.append((
+                    round(prix_achat, 2),
+                    round(self.__last_portfolio_value, 2),
+                    round(difference_de_prix, 2)
+                ))
+
+
+                # Mettre à jour la valeur initiale du portefeuille
+                # initial_portfolio_value = valeur_apres_vente
+            # Print portfolio value after each iteration
+            # print(f"Portfolio Value after iteration {i}: {self.__last_portfolio_value}")
+
+
+        # Calculate cumulative portfolio values
+        # cumulative_portfolio_values_over_time = self.calculate_portfolio_value(initial_portfolio_value)
+        
         # Print or return performance metrics
         print("Backtest complete. Performance metrics:")
-        print(f"Initial Portfolio Value: {historical_data['Close'].iloc[0]}")
-        print(f"Final Portfolio Value: {final_portfolio_value}")
-        print(f"Portfolio Return: {100 * (final_portfolio_value / historical_data['Close'].iloc[0] - 1):.2f}%")
+        print(f"Initial Portfolio Value: {initial_portfolio_value}")
+        print(f"Final Portfolio Value: {self.__last_portfolio_value}")
+        print(f"Portfolio Return: {100 * (self.__last_portfolio_value / initial_portfolio_value - 1):.2f}%")
+        print("Cumulative Portfolio Values Over Time:", self.__portfolio_values)
 
+    def calculate_portfolio_value(self, initial_portfolio_value):
+        # Calculate cumulative portfolio value based on the performance values recorded during backtest
+        relative_performance = np.array(self.__portfolio_values)
+        cumulative_portfolio_values = np.cumprod(relative_performance) * initial_portfolio_value
 
+        return cumulative_portfolio_values.tolist()
+    
     def calculate_sma_signal(self):
+        self.update_data()
+        if self.is_data_empty():
+            return 0
+
+        self.calculate_sma()
+        signal = self.generate_signal()
+        return signal
+
+    def update_data(self):
         if self.__df is None:
             self.__df = api.getOHLCV(self.__pair, self.__timeframe, limit=self.__sma + 1)
-        # print(self.__df)
-        new_data = api.getOHLCV(self.__pair, self.__timeframe,limit=1)
+        new_data = api.getOHLCV(self.__pair, self.__timeframe, limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
         self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
 
-        self.__df['SMA'] = self.__df['Close'].rolling(self.__sma).mean()
+    def is_data_empty(self):
         if self.__df is None or len(self.__df) == 0:
             print("DataFrame is empty or None.")
-            return 0
+            return True
+        return False
+
+    def calculate_sma(self):
+        self.__df['SMA'] = self.__df['Close'].rolling(self.__sma).mean()
+
+    def generate_signal(self):
         last_value = self.__df['Close'].iloc[-1]
         last_sma = self.__df['SMA'].iloc[-2]
 
@@ -74,11 +123,11 @@ class SimpleSMALive:
 
         if last_value > last_sma:
             return "buy"
-
         elif last_value < last_sma:
             return "sell"
 
         return 0
+    
     def __del__(self):
         return
 

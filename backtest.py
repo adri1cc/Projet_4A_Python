@@ -10,7 +10,14 @@ import datetime
 from matplotlib import dates as mPlotDATEs
 import os
 import pandas as pd
-
+def getData(instrument, timeframe):
+    print("inside getData")
+    csv_filename = instrument.replace('/', '-') + str(timeframe) + '.csv'
+    if not os.path.exists(csv_filename):
+        df = api.getOHLCV(instrument, timeframe, limit=1000)
+        df.to_csv(csv_filename, index=False)
+    df = read_csv(csv_filename, parse_dates=[0], index_col=0)
+    return df
 
 def getFeed(instrument, timeframe,since: int | None = None, limit: int | None = None):
     if limit>1000:
