@@ -6,7 +6,7 @@ from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
 from strat_live import *
-
+import plotly.graph_objects as go
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
 load_figure_template(["minty", "minty_dark"])
@@ -84,6 +84,7 @@ strat_backtest = dcc.Dropdown(
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
+usdt_message = html.Div(id= 'usdt-message', children='Quel pourcentage de usdt de votre portefeuille souhaitez vous utiliser ?')
 
 trading_logic = create_trading_logic()
 
@@ -131,7 +132,7 @@ app.layout = dbc.Container(
             [   
                 dbc.Col(
                             [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border"),
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border")
                             ],
                             width=10,
                             style={"position": "relative", "top": "500px", "left": "100px"},
@@ -148,6 +149,14 @@ app.layout = dbc.Container(
                         message_bis,
                     ],
                 ),
+                dbc.Col(
+                    [
+                        usdt_message,
+                        dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
+                    ],
+                    width=10,
+                    style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
+                )
             ],id="Live1",
         ),
         dbc.Container(
@@ -166,6 +175,7 @@ app.layout = dbc.Container(
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
+     #Input('slider-wallet','value'),
      Input('stop-trade-button', 'n_clicks')],
     [State('message-bis', 'children')]
 )
@@ -195,7 +205,7 @@ def print_wallet(switch_on, n_clicks, current_style):
 
     style = current_style or {"display": "none"}  # Set a default value for current_style
 
-    if n_clicks is not None and n_clicks % 2 == 1:
+    if n_clicks is not None and n_clicks > 0:
         # Button clicked, toggle visibility
         if style == {"display": "none"}:
             style = {"display": "block"}
@@ -215,6 +225,9 @@ def print_wallet(switch_on, n_clicks, current_style):
 
 def plotAccountInfo(df_account):
     fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+    # Create a pie chart with currencies and their totals
+    #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
+    #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
     return fig
 
 @callback( #Output("graph2", "figure")
