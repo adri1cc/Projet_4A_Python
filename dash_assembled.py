@@ -132,8 +132,6 @@ app.layout = dbc.Container(
             [   
                 dbc.Col(
                             [
-                                usdt_message,
-                                dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=50,tooltip={'placement': 'bottom', 'always_visible': True}),
                                 dcc.Graph(id="graph-wallet", figure=fig_graph, className="border")
                             ],
                             width=10,
@@ -151,6 +149,14 @@ app.layout = dbc.Container(
                         message_bis,
                     ],
                 ),
+                dbc.Col(
+                    [
+                        usdt_message,
+                        dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
+                    ],
+                    width=10,
+                    style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
+                )
             ],id="Live1",
         ),
         dbc.Container(
@@ -169,6 +175,7 @@ app.layout = dbc.Container(
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
+     #Input('slider-wallet','value'),
      Input('stop-trade-button', 'n_clicks')],
     [State('message-bis', 'children')]
 )
@@ -198,7 +205,7 @@ def print_wallet(switch_on, n_clicks, current_style):
 
     style = current_style or {"display": "none"}  # Set a default value for current_style
 
-    if n_clicks is not None and n_clicks % 2 == 1:
+    if n_clicks is not None and n_clicks > 0:
         # Button clicked, toggle visibility
         if style == {"display": "none"}:
             style = {"display": "block"}
