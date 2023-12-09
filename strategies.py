@@ -29,18 +29,31 @@ class SimpleSMALive:
 
         # Load historical data for backtesting
         historical_data = backtest.getData(self.__pair, self.__timeframe)
-        self.__df = historical_data.copy()
+        # print("histo")
+        # print(historical_data)
+        new_data = pd.DataFrame(columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume', 'SMA'])
 
+        self.__df = historical_data.copy()
+        
+        # print("le fff")
+        # print(len(historical_data))
             # Print initial portfolio value
         initial_portfolio_value = 1000
         self.__last_portfolio_value = initial_portfolio_value
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
-
+        print("le gggggg")
+        print(self.__df)
         for i in range(self.__sma, len(historical_data)):
             # Simulate receiving live data
-            new_data = historical_data.iloc[i:i+1]
-            self.__df = pd.concat([self.__df, new_data], ignore_index=True)
+            new_data = historical_data.iloc[i:i+1].copy()
 
+            # print("before")
+            #  print(self.__df)
+            # Assuming 'Timestamp' is already part of self.__df due to the previous addition
+            self.__df = pd.concat([self.__df, new_data])
+
+            # print("after") 
+            # print(self.__df)
             # Calculate SMA signal
             self.calculate_sma()
             signal = self.generate_signal()
@@ -57,11 +70,12 @@ class SimpleSMALive:
 
                 # Calculer la différence de prix entre l'achat et la vente
                 difference_de_prix = new_data['Close'].values[0] - prix_achat
+                time = new_data.index[-1]
 
                 # Enregistrer la valeur actuelle du portefeuille après la vente
                 valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value*difference_de_prix/prix_achat
                 self.__last_portfolio_value=valeur_apres_vente
-                self.__portfolio_values.append((
+                self.__portfolio_values.append((time,
                     round(prix_achat, 2),
                     round(self.__last_portfolio_value, 2),
                     round(difference_de_prix, 2)
@@ -79,30 +93,38 @@ class SimpleSMALive:
         # Print or return performance metrics
         print("Backtest complete. Performance metrics:")
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
-        print(f"Final Portfolio Value: {self.__last_portfolio_value}")
+        print(f"Final Portfolio Value: {round(self.__last_portfolio_value,2)}")
         print(f"Portfolio Return: {100 * (self.__last_portfolio_value / initial_portfolio_value - 1):.2f}%")
         print("Cumulative Portfolio Values Over Time:", self.__portfolio_values)
-        
+        print(len(self.__portfolio_values))
+        return 
+    
     def plot_figure(self):
+        # print("inside")
                 # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
-        prix, portfolio_values, changes = zip(*self.__portfolio_values)
-        dates = self.__df["Timestamp"]
+        sell, prix, portfolio_values, changes = zip(*self.__portfolio_values)
+        # print("inbetween")
+        # print(self.__df)
+        # print("daet")
+        dates = self.__df.index
+        # print("dates :")
         # print(dates)
 
         # Créez une figure avec deux sous-graphiques (un pour les valeurs du portefeuille, un pour les variations)
         fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-        fig.add_trace(go.Candlestick(x=df['Index'],
+        fig.add_trace(go.Candlestick(x=dates,
                     open=self.__df['Open'],
                     high=self.__df['High'],
                     low=self.__df['Low'],
                     close=self.__df['Close'],
                     name=f'{self.__pair} Candlestick'),
                     row=1, col=1)
-        fig.add_trace(go.Scatter(x=dates, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
-        fig.add_trace(go.Bar(x=dates, y=changes, name='Portfolio Changes'), row=3, col=1)
+        fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
+        fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
         title = 'Backtest '+ self.__pair
         fig.update_layout(title_text=title, showlegend=True)
         fig.update_layout(xaxis_rangeslider_visible=False)
+        print("out")
         return fig
 
     def calculate_portfolio_value(self, initial_portfolio_value):

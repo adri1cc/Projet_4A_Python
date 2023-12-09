@@ -5,7 +5,7 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from backtest import *
 from dash.exceptions import PreventUpdate
-from strat_live import *
+import strat_live 
 
 
 # Ajoutez vos données et initialisez l'application Dash comme auparavant...
@@ -84,7 +84,7 @@ strat_backtest = dcc.Dropdown(
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 
-trading_logic = create_trading_logic()
+trading_logic = strat_live.create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
@@ -165,11 +165,11 @@ def trade(n_clicks_trade, n_clicks_stop,strat_live,pair_live, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic, pair_live, strat_live)
+        strat_live.start_trade(trading_logic, pair_live, strat_live)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
-        stop_trade(trading_logic)
+        strat_live.stop_trade(trading_logic)
         return 'Trade stopped'
     else:
         # No button clicks
@@ -189,8 +189,8 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     global fig # Utilisez global pour mettre à jour ces variables globales
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
-        fig = run_SimpleSMA(slider_value, selected_pair)
-        
+        # fig = run_SimpleSMA(slider_value, selected_pair)
+        fig = strat_live.backtest(slider_value, selected_pair)
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)

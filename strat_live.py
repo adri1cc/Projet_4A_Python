@@ -9,6 +9,14 @@ result = None
 def create_trading_logic():
     return {'stop_flag': False}
 
+def backtest(value, pair):
+    sma = SimpleSMALive(pair, "5m", value)
+    sma.backtest()
+    print("let's fig")
+    fig = sma.plot_figure()
+    print("done fig")
+    return fig
+
 def start_trade(trading_logic, pair, strategy):
     global result
     sma = SimpleSMALive(pair, "5m", 10) 
@@ -25,7 +33,7 @@ def start_trade(trading_logic, pair, strategy):
         
         if sma.getLiveTrade() is False:
             # print("live_trade false")
-            sma.backtest()
+            # sma.backtest()
 
             if  result=="buy":
                 quantity_buy = getQuantity(pair,"buy")
