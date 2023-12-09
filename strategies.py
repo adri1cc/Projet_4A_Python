@@ -29,15 +29,10 @@ class SimpleSMALive:
 
         # Load historical data for backtesting
         historical_data = backtest.getData(self.__pair, self.__timeframe)
-        # print("histo")
-        # print(historical_data)
         new_data = pd.DataFrame(columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume', 'SMA'])
 
         self.__df = historical_data.copy()
         
-        # print("le fff")
-        # print(len(historical_data))
-            # Print initial portfolio value
         initial_portfolio_value = 1000
         self.__last_portfolio_value = initial_portfolio_value
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
@@ -47,13 +42,8 @@ class SimpleSMALive:
             # Simulate receiving live data
             new_data = historical_data.iloc[i:i+1].copy()
 
-            # print("before")
-            #  print(self.__df)
-            # Assuming 'Timestamp' is already part of self.__df due to the previous addition
             self.__df = pd.concat([self.__df, new_data])
 
-            # print("after") 
-            # print(self.__df)
             # Calculate SMA signal
             self.calculate_sma()
             signal = self.generate_signal()
@@ -63,7 +53,6 @@ class SimpleSMALive:
                 self.setLiveTrade(True)
                 # Enregistrer le prix d'achat
                 prix_achat = new_data['Close'].values[0]
-                # ... votre logique d'achat ici ...
 
             elif signal == "sell" and self.__liveTrade:
                 self.setLiveTrade(False)
@@ -80,15 +69,6 @@ class SimpleSMALive:
                     round(self.__last_portfolio_value, 2),
                     round(difference_de_prix, 2)
                 ))
-
-                # Mettre à jour la valeur initiale du portefeuille
-                # initial_portfolio_value = valeur_apres_vente
-            # Print portfolio value after each iteration
-            # print(f"Portfolio Value after iteration {i}: {self.__last_portfolio_value}")
-
-
-        # Calculate cumulative portfolio values
-        # cumulative_portfolio_values_over_time = self.calculate_portfolio_value(initial_portfolio_value)
         
         # Print or return performance metrics
         print("Backtest complete. Performance metrics:")
@@ -100,15 +80,9 @@ class SimpleSMALive:
         return 
     
     def plot_figure(self):
-        # print("inside")
                 # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations
         sell, prix, portfolio_values, changes = zip(*self.__portfolio_values)
-        # print("inbetween")
-        # print(self.__df)
-        # print("daet")
         dates = self.__df.index
-        # print("dates :")
-        # print(dates)
 
         # Créez une figure avec deux sous-graphiques (un pour les valeurs du portefeuille, un pour les variations)
         fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
@@ -127,13 +101,6 @@ class SimpleSMALive:
         print("out")
         return fig
 
-    def calculate_portfolio_value(self, initial_portfolio_value):
-        # Calculate cumulative portfolio value based on the performance values recorded during backtest
-        relative_performance = np.array(self.__portfolio_values)
-        cumulative_portfolio_values = np.cumprod(relative_performance) * initial_portfolio_value
-
-        return cumulative_portfolio_values.tolist()
-    
     def calculate_sma_signal(self):
         self.update_data()
         if self.is_data_empty():
