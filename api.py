@@ -2,8 +2,6 @@ import ccxt
 import dontshare_config as dc
 import pandas as pd
 from datetime import datetime
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 
 # Créer une instance du client Mexc
 mexc = ccxt.mexc({
