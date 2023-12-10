@@ -60,7 +60,7 @@ class SimpleSMALive:
         # Load historical data for backtesting
         if not os.path.exists(path):
             print("Need to download data...")
-            historical_data = api.getHistoricalData(self.__pair, self.__timeframe, since)
+            historical_data = api.get_historical_data(self.__pair, self.__timeframe, since)
         else:
             print("Using existing data...")
             historical_data = pd.read_csv(path)
@@ -84,11 +84,11 @@ class SimpleSMALive:
             signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
             if signal == "buy" and not self.__liveTrade:
-                self.setLiveTrade(True)
+                self.set_live_trade(True)
                 prix_achat = close_price
 
             elif signal == "sell" and self.__liveTrade:
-                self.setLiveTrade(False)
+                self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
                 valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value * difference_de_prix / prix_achat
                 self.__last_portfolio_value = valeur_apres_vente
