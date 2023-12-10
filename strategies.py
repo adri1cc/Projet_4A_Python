@@ -1,8 +1,8 @@
 import pandas as pd
 import api
-import backtest
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import os
 
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
@@ -21,9 +21,14 @@ class SimpleSMALive:
         print("Calcul backtest ...")
         # Reset portfolio values for a new backtest
         self.__portfolio_values = []
-
+        csv_file_path = r'BTC_USDT_data\BTC_USDT_5m_2022-07-21 00-00-00.csv'
         # Load historical data for backtesting
-        historical_data = backtest.getData(self.__pair, self.__timeframe)
+        # historical_data = backtest.getData(self.__pair, self.__timeframe)
+        if not os.path.exists(csv_file_path):
+            print("Need to download data...")
+            historical_data = api.getHistoricalData(self.__pair,self.__timeframe,'2022-07-21 00:00:00')
+        historical_data =pd.read_csv(csv_file_path)            
+
         new_data = pd.DataFrame(columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume', 'SMA'])
 
         self.__df = historical_data.copy()
@@ -31,8 +36,8 @@ class SimpleSMALive:
         initial_portfolio_value = 1000
         self.__last_portfolio_value = initial_portfolio_value
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
-        print("le gggggg")
-        print(self.__df)
+        # print("le gggggg")
+        # print(self.__df)
         for i in range(self.__sma, len(historical_data)):
             # Simulate receiving live data
             new_data = historical_data.iloc[i:i+1].copy()

@@ -163,9 +163,9 @@ def getHistoricalData(pair, timeframe, since):
         ohlcv.extend(new_ohlcv)
         if len(new_ohlcv) != 1000:
             break
-    df = pd.DataFrame(ohlcv, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
-    df['date'] = pd.to_datetime(df['date'], unit='ms')
-    df.set_index('date', inplace=True)
+    df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    df.set_index('Timestamp', inplace=True)
     df = df.sort_index(ascending=True)
     
     # Replace '/' character with '_'
