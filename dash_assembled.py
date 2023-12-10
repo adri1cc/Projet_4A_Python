@@ -1,14 +1,10 @@
-from dash import Dash, html, dcc, Input, Output, Patch, clientside_callback, callback, State
+from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 import plotly.express as px
-import plotly.io as pio
+import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
-from backtest import *
-from dash.exceptions import PreventUpdate
 import strat_live 
 
-
-# Ajoutez vos données et initialisez l'application Dash comme auparavant...
 load_figure_template(["minty", "minty_dark"])
 
 df = px.data.gapminder()
@@ -152,7 +148,7 @@ app.layout = dbc.Container(
         ),
     ]
 )
-# Définir la fonction de callback
+
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
