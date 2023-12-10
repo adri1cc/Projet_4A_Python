@@ -21,7 +21,7 @@ class SimpleSMALive:
 
     def backtest(self):
         print("Calculating backtest ...")
-        since = '2022-07-21 00:00:00'
+        since = '2023-01-01 00:00:00'
         # Reset portfolio values for a new backtest
         self.__portfolio_values = []
         pair_dir = self.__pair.replace('/', '_')
@@ -40,7 +40,6 @@ class SimpleSMALive:
         if not os.path.exists(path):
             print("Need to download data...")
             historical_data = api.getHistoricalData(self.__pair, self.__timeframe, since)
-            historical_data.to_csv(path, index=False)
         else:
             print("Using existing data...")
             historical_data = pd.read_csv(path)

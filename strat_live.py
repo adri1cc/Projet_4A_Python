@@ -1,20 +1,20 @@
 import api 
-from strategies import SimpleSMALive
+import strategies
 
 result = None
 
 def create_trading_logic():
     return {'stop_flag': False}
 
-def backtest(value, pair):
-    sma = SimpleSMALive(pair, "5m", value)
+def backtest(value, timeframe, pair):
+    sma = strategies.SimpleSMALive(pair, timeframe, value)
     sma.backtest()
     fig = sma.plot_figure()
     return fig
 
-def start_trade(trading_logic, pair, strategy):
+def start_trade(trading_logic, timeframe, pair, strategy):
     global result
-    sma = SimpleSMALive(pair, "5m", 10) 
+    sma = strategies.SimpleSMALive(pair, timeframe, 10) 
     print("Live trading is running")
     while not trading_logic['stop_flag']:
         print("Live trading is running")

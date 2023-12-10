@@ -162,7 +162,7 @@ def trade(n_clicks_trade, n_clicks_stop,strat_live,pair_live, previous_message):
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic, pair_live, strat_live)
+        start_trade(trading_logic, "5m",pair_live, strat_live)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
@@ -187,7 +187,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
         # fig = run_SimpleSMA(slider_value, selected_pair)
-        fig = backtest(slider_value, selected_pair)
+        fig = backtest(slider_value, "5m",selected_pair)
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
