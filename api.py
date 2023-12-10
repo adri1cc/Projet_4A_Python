@@ -149,3 +149,38 @@ def getQuantity(pair, side):
 
     return quantity
 
+import os
+
+def getHistoricalData(pair, timeframe, since):
+    # format for since '2022-07-21 00:00:00'
+    from_ts = exchange.parse8601(since)
+    ohlcv_list = []
+    ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
+    ohlcv_list.append(ohlcv)
+    while True:
+        from_ts = ohlcv[-1][0]
+        new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
+        ohlcv.extend(new_ohlcv)
+        if len(new_ohlcv) != 1000:
+            break
+    df = pd.DataFrame(ohlcv, columns=['date', 'open', 'high', 'low', 'close', 'volume'])
+    df['date'] = pd.to_datetime(df['date'], unit='ms')
+    df.set_index('date', inplace=True)
+    df = df.sort_index(ascending=True)
+    
+    # Replace '/' character with '_'
+    pair_dir = pair.replace('/', '_')
+
+    # Generate output directory based on pair and timeframe
+    output_dir = f"{pair_dir}_{timeframe}_data"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Generate output filename based on pair, timeframe, and start date
+    output_filename = os.path.join(output_dir, f"{pair_dir}_{timeframe}_{since.replace(':', '-')}.csv")
+
+    # Save DataFrame to CSV file
+    df.to_csv(output_filename)
+
+# Example usage:
+getHistoricalData('BTC/USDT', '5m', '2022-07-21 00:00:00')
+
