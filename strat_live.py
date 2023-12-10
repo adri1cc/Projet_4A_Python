@@ -1,7 +1,4 @@
-from pickletools import long1
-import time
-from api import *
-import pandas as pd
+import api 
 from strategies import SimpleSMALive
 
 result = None
@@ -12,9 +9,7 @@ def create_trading_logic():
 def backtest(value, pair):
     sma = SimpleSMALive(pair, "5m", value)
     sma.backtest()
-    print("let's fig")
     fig = sma.plot_figure()
-    print("done fig")
     return fig
 
 def start_trade(trading_logic, pair, strategy):
@@ -22,9 +17,8 @@ def start_trade(trading_logic, pair, strategy):
     sma = SimpleSMALive(pair, "5m", 10) 
     print("Live trading is running")
     while not trading_logic['stop_flag']:
-        # print("Live trading is running")
+        print("Live trading is running")
         if strategy == 'SimpleSMA': #Probablement une zone a améliorer elle est check a chques fois
-            # print("SimpleSMA")
             result = sma.calculate_sma_signal()
         elif strategy == 'Stratégie 2':
             print("Startégie 2 is not implemented")
@@ -32,23 +26,20 @@ def start_trade(trading_logic, pair, strategy):
             print("Startégie 3 is not implemented")
         
         if sma.getLiveTrade() is False:
-            # print("live_trade false")
-            # sma.backtest()
 
             if  result=="buy":
-                quantity_buy = getQuantity(pair,"buy")
+                quantity_buy = api.getQuantity(pair,"buy")
                 investment=getInvestment(quantity_buy,100)#TODO mettre le pourcentage de risque en parametre
+
                 if investment>6:
                     print("lunch buy order")
-                    
                     #place_order(pair, "buy", 6, "market")
                     sma.setLiveTrade(True)
-
                 else:
                     print("Not enought founds") 
 
         elif result=="sell":
-            quantity_sell = getQuantity(pair,"sell")
+            quantity_sell = api.getQuantity(pair,"sell")
 
             if quantity_sell>0:
                 print("lunch sell order")
@@ -56,6 +47,7 @@ def start_trade(trading_logic, pair, strategy):
                 sma.setLiveTrade(False)
             else:
                 print("Not enought founds")
+                
     print("Live trading is stopped")
     del sma
     return
@@ -65,8 +57,6 @@ def stop_trade(trading_logic):
 
 def getInvestment(quantity, percent):
     investment = quantity*percent/100
-    # print(investment)
     if investment<6:
         investment=6
-    # print(investment)
     return investment
