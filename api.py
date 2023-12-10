@@ -172,7 +172,7 @@ def getHistoricalData(pair, timeframe, since):
     pair_dir = pair.replace('/', '_')
 
     # Generate output directory based on pair and timeframe
-    output_dir = f"{pair_dir}_{timeframe}_data"
+    output_dir = f"{pair_dir}_data"
     os.makedirs(output_dir, exist_ok=True)
 
     # Generate output filename based on pair, timeframe, and start date
@@ -180,7 +180,4 @@ def getHistoricalData(pair, timeframe, since):
 
     # Save DataFrame to CSV file
     df.to_csv(output_filename)
-
-# Example usage:
-getHistoricalData('BTC/USDT', '5m', '2022-07-21 00:00:00')
 
