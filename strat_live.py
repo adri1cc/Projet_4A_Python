@@ -1,62 +1,92 @@
-import api 
+import api
 import strategies
 
 result = None
 
 def create_trading_logic():
+    """
+    Create a dictionary to hold trading logic parameters.
+    """
     return {'stop_flag': False}
 
 def backtest(value, timeframe, pair):
+    """
+    Perform backtesting using SimpleSMALive strategy.
+    
+    :param value: Some value.
+    :param timeframe: Timeframe for backtesting.
+    :param pair: Trading pair for backtesting.
+    :return: Figure object for plotting.
+    """
     sma = strategies.SimpleSMALive(pair, timeframe, value)
     sma.backtest()
     fig = sma.plot_figure()
     return fig
 
 def start_trade(trading_logic, timeframe, pair, strategy):
+    """
+    Start live trading based on the specified strategy.
+    
+    :param trading_logic: Dictionary holding trading logic parameters.
+    :param timeframe: Timeframe for live trading.
+    :param pair: Trading pair for live trading.
+    :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
+    """
     global result
-    sma = strategies.SimpleSMALive(pair, timeframe, 10) 
+    sma = strategies.SimpleSMALive(pair, timeframe, 10)
     print("Live trading is running")
+    
     while not trading_logic['stop_flag']:
         print("Live trading is running")
-        if strategy == 'SimpleSMA': #Probablement une zone a améliorer elle est check a chques fois
+        
+        if strategy == 'SimpleSMA':  # Probably a zone to improve, as it is checked every time
             result = sma.calculate_sma_signal()
-        elif strategy == 'Stratégie 2':
-            print("Startégie 2 is not implemented")
-        elif strategy == 'Stratégie 3':
-            print("Startégie 3 is not implemented")
+        elif strategy == 'Strategy 2':
+            print("Strategy 2 is not implemented")
+        elif strategy == 'Strategy 3':
+            print("Strategy 3 is not implemented")
         
         if sma.getLiveTrade() is False:
-
-            if  result=="buy":
-                quantity_buy = api.getQuantity(pair,"buy")
-                investment=getInvestment(quantity_buy,100)#TODO mettre le pourcentage de risque en parametre
-
-                if investment>6:
-                    print("lunch buy order")
-                    #place_order(pair, "buy", 6, "market")
+            if result == "buy":
+                quantity_buy = api.get_quantity(pair, "buy")
+                investment = get_investment(quantity_buy, 100)  # TODO: Set the risk percentage as a parameter
+                
+                if investment > 6:
+                    print("Launch buy order")
+                    # place_order(pair, "buy", 6, "market")
                     sma.setLiveTrade(True)
                 else:
-                    print("Not enought founds") 
-
-        elif result=="sell":
-            quantity_sell = api.getQuantity(pair,"sell")
-
-            if quantity_sell>0:
-                print("lunch sell order")
-                #place_order(pair, "sell", 6, "market")
+                    print("Not enough funds")
+        elif result == "sell":
+            quantity_sell = api.get_quantity(pair, "sell")
+            
+            if quantity_sell > 0:
+                print("Launch sell order")
+                # place_order(pair, "sell", 6, "market")
                 sma.setLiveTrade(False)
             else:
-                print("Not enought founds")
+                print("Not enough funds")
                 
     print("Live trading is stopped")
     del sma
-    return
 
 def stop_trade(trading_logic):
+    """
+    Stop live trading by setting the stop flag.
+    
+    :param trading_logic: Dictionary holding trading logic parameters.
+    """
     trading_logic['stop_flag'] = True
 
-def getInvestment(quantity, percent):
-    investment = quantity*percent/100
-    if investment<6:
-        investment=6
+def get_investment(quantity, percent):
+    """
+    Calculate the investment based on quantity and percentage.
+    
+    :param quantity: Quantity of the asset.
+    :param percent: Percentage of the investment.
+    :return: Calculated investment amount.
+    """
+    investment = quantity * percent / 100
+    if investment < 6:
+        investment = 6
     return investment
