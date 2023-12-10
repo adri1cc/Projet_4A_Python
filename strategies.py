@@ -22,7 +22,7 @@ class SimpleSMALive:
         self.__portfolio_values = []  # List to store portfolio values
         self.__last_portfolio_value = 1000  # To keep track of the last portfolio value
 
-    def setLiveTrade(self, side):
+    def set_live_trade(self, side):
         """
         Set the live trade status.
 
@@ -30,7 +30,7 @@ class SimpleSMALive:
         """
         self.__liveTrade = side
 
-    def getLiveTrade(self):
+    def get_live_trade(self):
         """
         Get the live trade status.
 
@@ -123,7 +123,7 @@ class SimpleSMALive:
         print("out")
         return fig
 
-    def calculate_sma_signal(self):
+    def calculate_signal(self):
         """
         Calculate SMA signal based on the current data.
 

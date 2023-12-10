@@ -9,7 +9,7 @@ def create_trading_logic():
     """
     return {'stop_flag': False}
 
-def backtest(value, timeframe, pair):
+def backtest(value, timeframe, pair):#TODO add strategy gestion
     """
     Perform backtesting using SimpleSMALive strategy.
     
@@ -26,50 +26,55 @@ def backtest(value, timeframe, pair):
 def start_trade(trading_logic, timeframe, pair, strategy):
     """
     Start live trading based on the specified strategy.
-    
+
     :param trading_logic: Dictionary holding trading logic parameters.
     :param timeframe: Timeframe for live trading.
     :param pair: Trading pair for live trading.
     :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
     """
-    global result
-    sma = strategies.SimpleSMALive(pair, timeframe, 10)
-    print("Live trading is running")
+    risk_percentage = 2  # Set the risk percentage as needed
+    investment_threshold = 6
     
+    strategies_dict = {
+        'SimpleSMA': strategies.SimpleSMALive,
+        # Add other strategies here
+    }
+
+    if strategy not in strategies_dict:
+        raise NotImplementedError(f"{strategy} is not implemented")
+
+    strategy_instance = strategies_dict[strategy](pair, timeframe, 10)
+    print("Live trading is running")
+
     while not trading_logic['stop_flag']:
         print("Live trading is running")
-        
-        if strategy == 'SimpleSMA':  # Probably a zone to improve, as it is checked every time
-            result = sma.calculate_sma_signal()
-        elif strategy == 'Strategy 2':
-            print("Strategy 2 is not implemented")
-        elif strategy == 'Strategy 3':
-            print("Strategy 3 is not implemented")
-        
-        if sma.getLiveTrade() is False:
+
+        result = strategy_instance.calculate_signal()
+
+        if not strategy_instance.get_live_trade():
             if result == "buy":
                 quantity_buy = api.get_quantity(pair, "buy")
-                investment = get_investment(quantity_buy, 100)  # TODO: Set the risk percentage as a parameter
-                
-                if investment > 6:
+                investment = get_investment(quantity_buy, risk_percentage)
+
+                if investment > investment_threshold:
                     print("Launch buy order")
                     # place_order(pair, "buy", 6, "market")
-                    sma.setLiveTrade(True)
+                    strategy_instance.set_live_trade(True)
                 else:
                     print("Not enough funds")
         elif result == "sell":
             quantity_sell = api.get_quantity(pair, "sell")
-            
+
             if quantity_sell > 0:
                 print("Launch sell order")
                 # place_order(pair, "sell", 6, "market")
-                sma.setLiveTrade(False)
+                strategy_instance.set_live_trade(False)
             else:
                 print("Not enough funds")
-                
-    print("Live trading is stopped")
-    del sma
 
+    print("Live trading is stopped")
+    del strategy_instance
+    
 def stop_trade(trading_logic):
     """
     Stop live trading by setting the stop flag.
