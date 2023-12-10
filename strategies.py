@@ -3,7 +3,7 @@ import api
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
-
+from tqdm import tqdm
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
         self.__pair = pair
@@ -17,66 +17,83 @@ class SimpleSMALive:
         self.__liveTrade = side
     def getLiveTrade(self):
         return self.__liveTrade
+    
+
     def backtest(self):
-        print("Calcul backtest ...")
+        print("Calculating backtest ...")
+        since = '2022-07-21 00:00:00'
         # Reset portfolio values for a new backtest
         self.__portfolio_values = []
-        csv_file_path = r'BTC_USDT_data\BTC_USDT_5m_2022-07-21 00-00-00.csv'
-        # Load historical data for backtesting
-        # historical_data = backtest.getData(self.__pair, self.__timeframe)
-        if not os.path.exists(csv_file_path):
-            print("Need to download data...")
-            historical_data = api.getHistoricalData(self.__pair,self.__timeframe,'2022-07-21 00:00:00')
-        historical_data =pd.read_csv(csv_file_path)            
+        pair_dir = self.__pair.replace('/', '_')
 
-        new_data = pd.DataFrame(columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume', 'SMA'])
+                # Generate output directory based on pair and timeframe
+        output_dir = f"{pair_dir}_data"
+
+        # Generate output filename based on pair, timeframe, and start date
+        filename = f"{pair_dir}_{self.__timeframe}_{since.replace(':', '-').replace(' ', '_')}.csv"
+
+        # Use os.path.join to create the full path
+        path = os.path.join(output_dir, filename)
+        print(path)
+ 
+        # Load historical data for backtesting
+        if not os.path.exists(path):
+            print("Need to download data...")
+            historical_data = api.getHistoricalData(self.__pair, self.__timeframe, since)
+            historical_data.to_csv(path, index=False)
+        else:
+            print("Using existing data...")
+            historical_data = pd.read_csv(path)
 
         self.__df = historical_data.copy()
         
         initial_portfolio_value = 1000
         self.__last_portfolio_value = initial_portfolio_value
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
-        # print("le gggggg")
-        # print(self.__df)
-        for i in range(self.__sma, len(historical_data)):
-            # Simulate receiving live data
-            new_data = historical_data.iloc[i:i+1].copy()
 
-            self.__df = pd.concat([self.__df, new_data])
+        # Extract relevant columns
+        close_prices = historical_data['Close']
+        timestamps = historical_data['Timestamp']
+
+        # Calculate SMA signal
+        self.__df['SMA'] = close_prices.rolling(self.__sma).mean()
+
+        # Execute trades based on the signal
+        for i in tqdm(range(self.__sma, len(historical_data)), desc="Backtesting Progress"):
+            # Simulate receiving live data
+            close_price = close_prices.iloc[i]
+            timestamp = timestamps.iloc[i]
 
             # Calculate SMA signal
-            self.calculate_sma()
-            signal = self.generate_signal()
+            last_sma = self.__df['SMA'].iloc[i-1]
+            signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
-            # Execute trades based on the signal (for simplicity, assuming constant position size)
+            # Execute trades based on the signal
             if signal == "buy" and not self.__liveTrade:
                 self.setLiveTrade(True)
                 # Enregistrer le prix d'achat
-                prix_achat = new_data['Close'].values[0]
+                prix_achat = close_price
 
             elif signal == "sell" and self.__liveTrade:
                 self.setLiveTrade(False)
 
                 # Calculer la différence de prix entre l'achat et la vente
-                difference_de_prix = new_data['Close'].values[0] - prix_achat
-                time = new_data.index[-1]
+                difference_de_prix = close_price - prix_achat
 
                 # Enregistrer la valeur actuelle du portefeuille après la vente
-                valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value*difference_de_prix/prix_achat
-                self.__last_portfolio_value=valeur_apres_vente
-                self.__portfolio_values.append((time,
-                    round(prix_achat, 2),
-                    round(self.__last_portfolio_value, 2),
-                    round(difference_de_prix, 2)
-                ))
-        
+                valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value * difference_de_prix / prix_achat
+                self.__last_portfolio_value = valeur_apres_vente
+                self.__portfolio_values.append((timestamp, round(prix_achat, 2), round(self.__last_portfolio_value, 2), round(difference_de_prix, 2)))
+
         # Print or return performance metrics
         print("Backtest complete. Performance metrics:")
         print(f"Initial Portfolio Value: {initial_portfolio_value}")
-        print(f"Final Portfolio Value: {round(self.__last_portfolio_value,2)}")
+        print(f"Final Portfolio Value: {round(self.__last_portfolio_value, 2)}")
         print(f"Portfolio Return: {100 * (self.__last_portfolio_value / initial_portfolio_value - 1):.2f}%")
-        print("Cumulative Portfolio Values Over Time:", self.__portfolio_values)
-        return 
+        # print("Cumulative Portfolio Values Over Time:", self.__portfolio_values)
+        return
+
+ 
     
     def plot_figure(self):
                 # Divisez les données en trois listes distinctes pour les dates, les valeurs du portefeuille et les variations

@@ -161,23 +161,30 @@ def getHistoricalData(pair, timeframe, since):
         from_ts = ohlcv[-1][0]
         new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
         ohlcv.extend(new_ohlcv)
+        print("1")
         if len(new_ohlcv) != 1000:
+            print("out")
             break
     df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    print("1")
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    print("2")
     df.set_index('Timestamp', inplace=True)
+    print("3")
     df = df.sort_index(ascending=True)
-    
+    print("4")
     # Replace '/' character with '_'
     pair_dir = pair.replace('/', '_')
-
+    print("4.1")
     # Generate output directory based on pair and timeframe
-    output_dir = f"{pair_dir}_data"
+    output_dir = os.path.join(pair_dir + '_data')
     os.makedirs(output_dir, exist_ok=True)
-
+    print("5")
     # Generate output filename based on pair, timeframe, and start date
-    output_filename = os.path.join(output_dir, f"{pair_dir}_{timeframe}_{since.replace(':', '-')}.csv")
+    filename_prefix = f"{pair_dir}_{timeframe}_{since.replace(':', '-').replace(' ', '_')}"
+    output_filename = os.path.join(output_dir, f"{filename_prefix}.csv")
 
     # Save DataFrame to CSV file
     df.to_csv(output_filename)
-
+    print("out")
+    return
