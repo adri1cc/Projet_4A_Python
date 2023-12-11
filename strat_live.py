@@ -1,70 +1,98 @@
-from pickletools import long1
-import time
-from api import *
-import pandas as pd
+import api
+import strategies
 
-
-df = None
-live_trade = False
+result = None
 
 def create_trading_logic():
+    """
+    Create a dictionary to hold trading logic parameters.
+    """
     return {'stop_flag': False}
 
-def start_trade(trading_logic):
+def backtest(value, timeframe, pair):#TODO add strategy gestion
+    """
+    Perform backtesting using SimpleSMALive strategy.
+    
+    :param value: Some value.
+    :param timeframe: Timeframe for backtesting.
+    :param pair: Trading pair for backtesting.
+    :return: Figure object for plotting.
+    """
+    sma = strategies.SimpleSMALive(pair, timeframe, value)
+    sma.backtest()
+    fig = sma.plot_figure()
+    return fig
+
+def start_trade(trading_logic, timeframe, pair, strategy, percentage):
+    """
+    Start live trading based on the specified strategy.
+
+    :param trading_logic: Dictionary holding trading logic parameters.
+    :param timeframe: Timeframe for live trading.
+    :param pair: Trading pair for live trading.
+    :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
+    """
+    #risk_percentage = 2  # Set the risk percentage as needed
+    investment_threshold = 6
+    
+    strategies_dict = {
+        'SimpleSMA': strategies.SimpleSMALive,
+        # Add other strategies here
+    }
+
+    if strategy not in strategies_dict:
+        raise NotImplementedError(f"{strategy} is not implemented")
+
+    strategy_instance = strategies_dict[strategy](pair, timeframe, 10)
+    print("Live trading is running")
+    print(percentage)
+
     while not trading_logic['stop_flag']:
         print("Live trading is running")
-        SimpleSMALive("BTC/USDT","5m",5)
-        #time.sleep(2)
-    print("Live trading is stopped")
 
+        result = strategy_instance.calculate_signal()
+
+        if not strategy_instance.get_live_trade():
+            if result == "buy":
+                quantity_buy = api.get_quantity(pair, "buy")
+                investment = get_investment(quantity_buy, percentage) #Replaced risk_percentage with an output value percentage
+
+                if investment > investment_threshold:
+                    print("Launch buy order")
+                    # place_order(pair, "buy", 6, "market")
+                    strategy_instance.set_live_trade(True)
+                else:
+                    print("Not enough funds")
+        elif result == "sell":
+            quantity_sell = api.get_quantity(pair, "sell")
+
+            if quantity_sell > 0:
+                print("Launch sell order")
+                # place_order(pair, "sell", 6, "market")
+                strategy_instance.set_live_trade(False)
+            else:
+                print("Not enough funds")
+
+    print("Live trading is stopped")
+    del strategy_instance
+    
 def stop_trade(trading_logic):
+    """
+    Stop live trading by setting the stop flag.
+    
+    :param trading_logic: Dictionary holding trading logic parameters.
+    """
     trading_logic['stop_flag'] = True
 
-# TODO extraire la stratégie de la onction suivante,
-# TODO 
-def SimpleSMALive(pair, timeframe, sma):
-    global df
-    global live_trade
-    if df is None:
-        df = getOHLCV(pair, timeframe, limit=sma+1)
-
-    df = pd.concat([df, getOHLCV(pair, timeframe, limit=1)], ignore_index=True)
-    # print(df)
-    df = df.drop_duplicates(subset=['Timestamp'], keep='last')
-
-    # print(df)
-    df['SMA'] = df['Close'].rolling(sma).mean()
+def get_investment(quantity, percent):
+    """
+    Calculate the investment based on quantity and percentage.
     
-    last_value = df['Close'].iloc[-1]
-    last_sma = df['SMA'].iloc[-2]
-    print(f"SMA {last_sma} CLose {last_value}")
-    # print(df)
-    if last_sma is None:
-        print("last sma null")
-        return
-    
-    if live_trade is False:
-        print("live_trade false")
-
-        if  last_value > last_sma:
-
-            if getQuantity(pair,"buy")>0:
-                print("lunch buy order")
-                #place_order(pair, "buy", 6, "market")
-                live_trade = True
-
-            else:
-                print("Not enought founds") 
-
-    elif last_value < last_sma:
-        if getQuantity(pair,"sell")>0:
-                print("lunch sell order")
-                #place_order(pair, "sell", 6, "market")
-                live_trade = False
-
-    return 
-
-last_value = 0
-last_sma =0
-
-# SimpleSMALive("BTC/USDT", "5m", 10)
+    :param quantity: Quantity of the asset.
+    :param percent: Percentage of the investment.
+    :return: Calculated investment amount.
+    """
+    investment = quantity * percent / 100
+    if investment < 6:
+        investment = 6
+    return investment

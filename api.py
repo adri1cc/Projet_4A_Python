@@ -2,43 +2,46 @@ import ccxt
 import dontshare_config as dc
 import pandas as pd
 from datetime import datetime
-import matplotlib.pyplot as plt
-import plotly.graph_objects as go
+import os
 
-# Créer une instance du client Mexc
+# Create an instance of the Mexc client
 mexc = ccxt.mexc({
-    'apiKey': dc.API_KEY_MEXC,# Clé API publique
-    'secret': dc.API_SECRET_MEXC, # Clé API privée
-    'enableRateLimit': True,  # Activer la limite de taux si nécessaire
+    'apiKey': dc.API_KEY_MEXC,  # Public API key
+    'secret': dc.API_SECRET_MEXC,  # Private API key
+    'enableRateLimit': True,  # Enable rate limit if necessary
 })
 
 mexc_futures = ccxt.mexc({
     'apiKey': dc.API_KEY_MEXC,
     'secret': dc.API_SECRET_MEXC,
-    'enableRateLimit': True,  # Activer la limite de taux si nécessaire
-    "options": {'defaultType': 'swap' } # Défini comppte FUTURES
+    'enableRateLimit': True,  # Enable rate limit if necessary
+    "options": {'defaultType': 'swap'}  # Set account type to FUTURES
 })
 
 """binance_testnet = ccxt.binance({
     'apiKey': dc.API_KEY_BINANCE,
     'secret': dc.API_SECRET_BINANCE,
-    'enableRateLimit': True,  # Activer la limite de taux si nécessaire
+    'enableRateLimit': True,  # Enable rate limit if necessary
 })
 
 coinbase_testnet = ccxt.coinbase({
     'apiKey': dc.API_KEY_COINBASE,
     'secret': dc.API_SECRET_COINBASE,
-    'enableRateLimit': True,  # Activer la limite de taux si nécessaire
+    'enableRateLimit': True,  # Enable rate limit if necessary
 })"""
 
-exchange = mexc # Choix de l'exchange sur lequel les opérations sont éffectuées
-#exchange.set_sandbox_mode(True)  # enable sandbox mode
+exchange = mexc  # Choose the exchange on which operations are performed
 
-def getInfoAccount():
+def get_info_account():
+    """
+    Get account information.
+
+    :return: Pandas DataFrame with account information.
+    """
     try:
         balance = exchange.fetch_balance()
 
-        # Créer un DataFrame pandas pour stocker les informations du compte
+        # Create a pandas DataFrame to store account information
         account_info = {
             'Currency': [],
             'Total': [],
@@ -54,48 +57,66 @@ def getInfoAccount():
 
         df_account = pd.DataFrame(account_info)
 
-        # Afficher le DataFrame
+        # Display the DataFrame
         return df_account
 
     except ccxt.NetworkError as e:
-        print('Problème de connexion : ', type(e).__name__, str(e))
+        print('Connection problem: ', type(e).__name__, str(e))
     except ccxt.ExchangeError as e:
-        print('Erreur d\'échange : ', type(e).__name__, str(e))
+        print('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
-        print('Une erreur s\'est produite : ', type(e).__name__, str(e))
-    
-def getOHLCV(symbol, timeframe,since: int | None = None,limit: int | None = None):
-    
-    # Récupérer les bougies
+        print('An error occurred: ', type(e).__name__, str(e))
+
+def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = None):
+    """
+    Get OHLCV data.
+
+    :param symbol: Trading pair symbol.
+    :param timeframe: Timeframe for OHLCV data.
+    :param since: Timestamp indicating the start time for data retrieval.
+    :param limit: Limit the number of data points to retrieve.
+    :return: Pandas DataFrame with OHLCV data.
+    """
+    print("Fetching data...")
     try:
         candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
-        
-        # Créer une liste pour stocker les données des bougies
+
+        # Create a list to store candle data
         candle_data = []
 
         for candle in candles:
             timestamp, open_, high, low, close, volume = candle
-            dt_object = datetime.utcfromtimestamp(timestamp / 1000)  # Convertir le timestamp en objet datetime
+            dt_object = datetime.utcfromtimestamp(timestamp / 1000)  # Convert timestamp to datetime object
             candle_data.append([dt_object, open_, high, low, close, volume])
 
-        # Créer un DataFrame pandas
+        # Create a pandas DataFrame
         columns = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
         df = pd.DataFrame(candle_data, columns=columns)
-
-        # Afficher le DataFrame
+        print("Data retrieved")
+        # Display the DataFrame
         return df
 
     except ccxt.NetworkError as e:
-        print('Problème de connexion : ', type(e).__name__, str(e))
+        print('Connection problem: ', type(e).__name__, str(e))
     except ccxt.ExchangeError as e:
-        print('Erreur d\'échange : ', type(e).__name__, str(e))
+        print('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
-        print('Une erreur s\'est produite : ', type(e).__name__, str(e))
+        print('An error occurred: ', type(e).__name__, str(e))
 
-def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profit=None, investment_value=None, limit_price=None):
+def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profit=None, investment_value=None,
+                limit_price=None):
+    """
+    Place a trading order.
 
-    # Direction : long or short
-    
+    :param symbol: Trading pair symbol.
+    :param direction: Order direction ('long' or 'short').
+    :param stop_loss: Stop loss price.
+    :param take_profit: Take profit price.
+    :param investment_value: Amount to invest.
+    :param limit_price: Limit price for the order.
+    """
+    # Direction: long or short
+
     # Order parameters
     side = 'buy' if direction == 'long' else 'sell'
     # Create the order
@@ -120,22 +141,28 @@ def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profi
         print('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
         print('An error occurred: ', type(e).__name__, str(e))
-    return 
+    return
 
+def get_quantity(pair, side):
+    """
+    Get the quantity of a currency in the account.
 
-def getQuantity(pair, side):
-    balance = getInfoAccount()
+    :param pair: Trading pair symbol.
+    :param side: Order direction ('buy' or 'sell').
+    :return: Quantity of the currency.
+    """
+    balance = get_info_account()
     print(balance['Currency'])
-    quantity = 0 
+    quantity = 0
 
     base_currency, quote_currency = pair.split("/")
-    
+
     if side == "sell":
 
         if base_currency not in balance['Currency'].values:
             print(f"{base_currency} not found in the balance.")
             return 0
-        
+
         quantity = balance['Free'][balance['Currency'] == base_currency].values[0]
         print(f"Quantity of {base_currency} for {side}: {quantity}")
 
@@ -144,9 +171,46 @@ def getQuantity(pair, side):
         if quote_currency not in balance['Currency'].values:
             print(f"{quote_currency} not found in the balance.")
             return 0
-        
+
         quantity = balance['Free'][balance['Currency'] == quote_currency].values[0]
         print(f"Quantity of {quote_currency} for {side}: {quantity}")
 
     return quantity
 
+def get_historical_data(pair, timeframe, since):
+    """
+    Get historical data for backtesting.
+
+    :param pair: Trading pair symbol.
+    :param timeframe: Timeframe for historical data.
+    :param since: Start date for data retrieval.
+    """
+    from_ts = exchange.parse8601(since)
+    ohlcv_list = []
+    ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
+    ohlcv_list.append(ohlcv)
+    while True:
+        print("Downloading...")
+        from_ts = ohlcv[-1][0]
+        new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
+        ohlcv.extend(new_ohlcv)
+        print("1")
+        if len(new_ohlcv) != 1000:
+            print("out")
+            break
+    df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    df.set_index('Timestamp', inplace=True)
+    df = df.sort_index(ascending=True)
+    # Replace '/' character with '_'
+    pair_dir = pair.replace('/', '_')
+    # Generate output directory based on pair and timeframe
+    output_dir = os.path.join(pair_dir + '_data')
+    os.makedirs(output_dir, exist_ok=True)
+    # Generate output filename based on pair, timeframe, and start date
+    filename_prefix = f"{pair_dir}_{timeframe}_{since.replace(':', '-').replace(' ', '_')}"
+    output_filename = os.path.join(output_dir, f"{filename_prefix}.csv")
+
+    # Save DataFrame to CSV file
+    df.to_csv(output_filename)
+    return

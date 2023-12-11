@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.io as pio
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
-from backtest import *
+import backtest
 from dash.exceptions import PreventUpdate
 from strat_live import *
 import plotly.graph_objects as go
@@ -61,7 +61,7 @@ pair = dcc.Dropdown(
 
 strat = dcc.Dropdown(
                     options=[
-                        {'label': 'Stratégie 1', 'value': 'Stratégie 1'},
+                        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
                             ],value='Stratégie',id='strat-dropdown',
@@ -84,7 +84,7 @@ strat_backtest = dcc.Dropdown(
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
-usdt_message = html.Div(id= 'usdt-message', children='Quel pourcentage de usdt de votre portefeuille souhaitez vous utiliser ?')
+percentage_message = html.Div(id= 'percentage-message')
 
 trading_logic = create_trading_logic()
 
@@ -151,7 +151,7 @@ app.layout = dbc.Container(
                 ),
                 dbc.Col(
                     [
-                        usdt_message,
+                        percentage_message,
                         dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
                     ],
                     width=10,
@@ -175,15 +175,20 @@ app.layout = dbc.Container(
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
-     #Input('slider-wallet','value'),
-     Input('stop-trade-button', 'n_clicks')],
+     Input('stop-trade-button', 'n_clicks'),
+     Input('strat-dropdown', 'value'),
+     Input('pair-dropdown', 'value'),
+     Input('slider-wallet','value'),],
     [State('message-bis', 'children')]
 )
-def trade(n_clicks_trade, n_clicks_stop, previous_message):
+def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, previous_message):
+    """
+    Callback to handle starting and stopping trades.
+    """
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic)
+        start_trade(trading_logic, "5m", pair_live, strat_live, percentage)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
@@ -243,7 +248,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     global fig # Utilisez global pour mettre à jour ces variables globales
     if n_clicks > 0:
         # Assurez-vous que votre fonction run_strategy renvoie une figure Plotly
-        fig = run_SimpleSMA(slider_value, selected_pair)
+        fig = backtest.run_SimpleSMA(slider_value, selected_pair)
         
     # Mettez à jour le modèle de thème pour Plotly Express
     template = "minty" if switch_on else "minty_dark"
@@ -274,6 +279,12 @@ def hide_graph(switch_value):
 def update_selected_message(selected_strat, selected_pair):
     return f"Vous avez choisi la stratégie {selected_strat} sur la paire {selected_pair}."
 
+@callback(
+    Output('percentage-message', 'children'),
+    Input('pair-dropdown', 'value'),
+)
+def update_percentage_message(selected_pair):
+    return f"Quel pourcentage de la paire {selected_pair} souhaitez-vous utiliser?"
 
 clientside_callback(
     """
