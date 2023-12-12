@@ -62,7 +62,7 @@ pair = dcc.Dropdown(
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='Paire',id='pair-dropdown',
+                            ],value='BTC/USDT',id='pair-dropdown',
                     )
 
 strat = dcc.Dropdown(
@@ -70,7 +70,7 @@ strat = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-dropdown',
+                            ],value='SimpleSMA',id='strat-dropdown',
                     )
 pair_backtest = dcc.Dropdown(
                     options=[
@@ -85,7 +85,7 @@ strat_backtest = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-backtest-dropdown',
+                            ],value='SimpleSMA',id='strat-backtest-dropdown',
                     )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
