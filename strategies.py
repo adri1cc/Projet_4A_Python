@@ -38,12 +38,13 @@ class SimpleSMALive:
         """
         return self.__liveTrade
 
-    def backtest(self): #TODO add gestion of date
+    def backtest(self, since): #TODO add when buy and when sell to portfolio_values
         """
         Perform backtesting and update portfolio values.
         """
         print("Calculating backtest ...")
-        since = '2022-06-11 00:00:00'
+        if since is None:
+            since = '2023-06-11 00:00:00'
         self.__portfolio_values = []
 
         # Generate output directory based on pair and timeframe
@@ -51,7 +52,8 @@ class SimpleSMALive:
         output_dir = f"{pair_dir}_data"
 
         # Generate output filename based on pair, timeframe, and start date
-        filename = f"{pair_dir}_{self.__timeframe}_{since.replace(':', '-').replace(' ', '_')}.csv"
+        formatted_since = since.replace(':', '-').replace(' ', '_')
+        filename = f"{pair_dir}_{self.__timeframe}_{formatted_since}.csv"
 
         # Use os.path.join to create the full path
         path = os.path.join(output_dir, filename)

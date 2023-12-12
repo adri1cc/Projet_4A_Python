@@ -9,6 +9,9 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 import api
+import dash
+from dash.exceptions import PreventUpdate
+from datetime import datetime
 
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
@@ -91,7 +94,7 @@ strat_backtest = dcc.Dropdown(
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 percentage_message = html.Div(id= 'percentage-message')
-
+date = None
 trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
@@ -115,6 +118,11 @@ app.layout = dbc.Container(
 
                         dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "100px"}, width=2),
                         dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "100px"}, width=2),
+                        dbc.Col(html.Div([
+                                        html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
+                                        dcc.Input(id='input-date', type='text'),
+                                        html.Div(id='output-date')
+                                    ]), style={"position": "absolute", "top": "400px", "left": "100px"}, width=2),
                     ]
                 ),
                 dbc.Row(
@@ -203,6 +211,24 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
     else:
         # No button clicks
         return previous_message
+@app.callback(
+    dash.dependencies.Output('output-date', 'children'),
+    [dash.dependencies.Input('input-date', 'value')]
+)
+def update_output(value):
+    global date
+    if not value:
+        raise PreventUpdate  # Ne rien faire si la valeur est vide
+
+    try:
+        # Tentez de convertir la valeur en objet datetime
+        datetime_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        date = str(datetime_obj)
+        print(date)
+        print(type(date))
+        return 'Vous avez saisi une date valide : {}'.format(datetime_obj.strftime('%Y-%m-%d %H:%M:%S'))
+    except ValueError:
+        return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
 # @app.callback(
 #     Output("graph-wallet", "figure"),
@@ -254,12 +280,13 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
     """
     Callback to update figures based on selected parameters.
     """
+    global date
     global fig # Use global to update these global variables
     if n_clicks_backtest is not None and n_clicks_backtest > previous_backtest_button['backtest_buton']:
         previous_backtest_button['backtest_buton'] = n_clicks_backtest
         # Make sure your run_strategy function returns a Plotly figure
         # fig = run_SimpleSMA(slider_value, selected_pair)
-        fig = backtest(slider_value, "5m", selected_pair,selected_strat)
+        fig = backtest(slider_value, "5m", selected_pair,selected_strat,date)
     # Update the theme template for Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
