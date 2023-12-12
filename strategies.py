@@ -108,13 +108,14 @@ class SimpleSMALive:
         dates = self.__df.index
 
         fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-        fig.add_trace(go.Candlestick(x=dates,
-                                     open=self.__df['Open'],
-                                     high=self.__df['High'],
-                                     low=self.__df['Low'],
-                                     close=self.__df['Close'],
-                                     name=f'{self.__pair} Candlestick'),
-                      row=1, col=1)
+        # fig.add_trace(go.Candlestick(x=dates,
+                    #                  open=self.__df['Open'],
+                    #                  high=self.__df['High'],
+                    #                  low=self.__df['Low'],
+                    #                  close=self.__df['Close'],
+                    #                  name=f'{self.__pair} Candlestick'),
+                    #   row=1, col=1)
+        fig.add_trace(go.Scatter(x=dates, y = self.__df['Close'], mode='lines', name='Values'), row=1, col=1)
         fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
         fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
         title = 'Backtest ' + self.__pair
