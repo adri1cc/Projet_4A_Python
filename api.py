@@ -194,9 +194,9 @@ def get_historical_data(pair, timeframe, since):
         from_ts = ohlcv[-1][0]
         new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
         ohlcv.extend(new_ohlcv)
-        print("1")
+        # print("1")
         if len(new_ohlcv) != 1000:
-            print("out")
+            # print("out")
             break
     df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')

@@ -125,7 +125,7 @@ app.layout = dbc.Container(
                                 dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
                             ],
                             width=10,
-                            style={"position": "relative", "left": "250px"},
+                            style={"position": "relative", "left": "225px"},
                         ),
                         # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
 

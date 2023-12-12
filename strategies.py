@@ -38,12 +38,12 @@ class SimpleSMALive:
         """
         return self.__liveTrade
 
-    def backtest(self):
+    def backtest(self): #TODO add gestion of date
         """
         Perform backtesting and update portfolio values.
         """
         print("Calculating backtest ...")
-        since = '2022-07-21 00:00:00'
+        since = '2022-06-11 00:00:00'
         self.__portfolio_values = []
 
         # Generate output directory based on pair and timeframe
@@ -61,6 +61,7 @@ class SimpleSMALive:
         if not os.path.exists(path):
             print("Need to download data...")
             historical_data = api.get_historical_data(self.__pair, self.__timeframe, since)
+            historical_data = pd.read_csv(path)
         else:
             print("Using existing data...")
             historical_data = pd.read_csv(path)
@@ -146,7 +147,7 @@ class SimpleSMALive:
             self.__df = api.get_ohlcv(self.__pair, self.__timeframe, limit=self.__sma + 1)
         new_data = api.get_ohlcv(self.__pair, self.__timeframe, limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
-        self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
+        self.__df = pd.drop_duplicates(subset=['Timestamp'], keep='last')
 
     def is_data_empty(self):
         """
