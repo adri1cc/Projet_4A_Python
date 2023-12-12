@@ -23,7 +23,7 @@ def backtest(value, timeframe, pair):#TODO add strategy gestion
     fig = sma.plot_figure()
     return fig
 
-def start_trade(trading_logic, timeframe, pair, strategy):
+def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     """
     Start live trading based on the specified strategy.
 
@@ -32,7 +32,7 @@ def start_trade(trading_logic, timeframe, pair, strategy):
     :param pair: Trading pair for live trading.
     :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
     """
-    risk_percentage = 100  # Set the risk percentage as needed
+    #risk_percentage = 2  # Set the risk percentage as needed
     investment_threshold = 6
     
     strategies_dict = {
@@ -45,6 +45,7 @@ def start_trade(trading_logic, timeframe, pair, strategy):
 
     strategy_instance = strategies_dict[strategy](pair, timeframe, 10)
     print("Live trading is running")
+    print(percentage)
 
     while not trading_logic['stop_flag']:
         print("Live trading is running")
@@ -54,7 +55,7 @@ def start_trade(trading_logic, timeframe, pair, strategy):
         if not strategy_instance.get_live_trade():
             if result == "buy":
                 quantity_buy = api.get_quantity(pair, "buy")
-                investment = get_investment(quantity_buy, risk_percentage)
+                investment = get_investment(quantity_buy, percentage) #Replaced risk_percentage with an output value percentage
 
                 if investment > investment_threshold:
                     print("Launch buy order")

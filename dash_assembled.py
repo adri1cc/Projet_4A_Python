@@ -8,6 +8,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
+import api
 
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
@@ -31,69 +32,71 @@ test_mode_switch = html.Div(
     [
         dbc.Row(
             [
-                dbc.Col(html.Label("Live"), width="auto"),  # Position "Basique" to the left
+                dbc.Col(html.Label("Live"), width="auto"),  # Positionne "Basique" à gauche
                 dbc.Col(dbc.Switch(id="test-mode-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
-                dbc.Col(html.Label("Analyse"), width="auto"),  # Position "Avancé" to the right
+                dbc.Col(html.Label("Analyse"), width="auto"),  # Positionne "Avancé" à droite
             ],
-            className="align-items-center",  # Center elements vertically in the row
+            className="align-items-center",  # Centre les éléments verticalement dans la ligne
         ),
     ],
-    style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Add this line to set the button text size
+    style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
 )
 
-### FIGURES ###
+### LES FIGURES ###
 fig = go.Figure()
 fig_graph = go.Figure()
 
-### BUTTONS ###
-trade_button = dbc.Button("Start bot", id="trade-button", n_clicks=0, color="primary", size="lg")
-stop_trade_button = dbc.Button("Stop bot", id="stop-trade-button", n_clicks=0, color="secondary", size="lg")
-previous_state = {'trade': 0, 'stop': 0}
-backtest_button = dbc.Button("See backtest", id="backtest-button", n_clicks=0, color="primary", size="lg")
 
-### DROPDOWN LISTS ###
+### LES BOUTONS ###
+trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
+stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
+wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
+previous_state = {'trade': 0, 'stop': 0}
+backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
+
+### LES LISTES DEROULANTES ###
 
 pair = dcc.Dropdown(
-    options=[
-        {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
-        {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
-        {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-    ], value='BTC/USDT', id='pair-dropdown',
-)
+                    options=[
+                        {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
+                        {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
+                        {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
+                            ],value='Paire',id='pair-dropdown',
+                    )
 
 strat = dcc.Dropdown(
-    options=[
-        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-        {'label': 'Strategy 2', 'value': 'Strategy 2'},
-        {'label': 'Strategy 3', 'value': 'Strategy 3'},
-    ], value='SimpleSMA', id='strat-dropdown',
-)
-
+                    options=[
+                        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
+                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
+                        {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
+                            ],value='Stratégie',id='strat-dropdown',
+                    )
 pair_backtest = dcc.Dropdown(
-    options=[
-        {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
-        {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
-        {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-    ], value='BTC/USDT', id='pair-backtest-dropdown',
-)
+                    options=[
+                        {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
+                        {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
+                        {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
+                            ],value='BTC/USDT',id='pair-backtest-dropdown',
+                    )
 
 strat_backtest = dcc.Dropdown(
-    options=[
-        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-        {'label': 'Strategy 2', 'value': 'Strategy 2'},
-        {'label': 'Strategy 3', 'value': 'Strategy 3'},
-    ], value='SimpleSMA', id='strat-backtest-dropdown',
-)
+                    options=[
+                        {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
+                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
+                        {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
+                            ],value='Stratégie',id='strat-backtest-dropdown',
+                    )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
-message_bis = html.Div(id='message-bis', children='Waiting', style={"position": "absolute", "top": "300px", "left": "500px"})
+message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
+percentage_message = html.Div(id= 'percentage-message')
 
 trading_logic = create_trading_logic()
 
-# Use dbc.Row and dbc.Col to organize elements
+# Utilisez dbc.Row et dbc.Col pour organiser les éléments
 app.layout = dbc.Container(
     [
-        html.Div(["TRADING DASHBOARD"], className="bg-primary text-white h3 p-2",),
+        html.Div(["DASHBOARD TRADING"], className="bg-primary text-white h3 p-2",),
         dbc.Row(
             [
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
@@ -151,7 +154,15 @@ app.layout = dbc.Container(
                         message_bis,
                     ],
                 ),
-            ], id="Live1",
+                dbc.Col(
+                    [
+                        percentage_message,
+                        dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
+                    ],
+                    width=10,
+                    style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
+                )
+            ],id="Live1",
         ),
         dbc.Container(
             [
@@ -159,27 +170,30 @@ app.layout = dbc.Container(
     className="d-grid gap-2 d-md-block",),
                 html.Div([stop_trade_button], style={"position": "absolute", "top": "350px", "left": "250px"},
     className="d-grid gap-2 d-md-block",),
-            ], id="Live2",
+                html.Div([wallet_button], style={"position": "absolute", "top": "450px", "left": "250px"},
+    className="d-grid gap-2 d-md-block",),
+            ],id="Live2",
         ),
     ]
 )
-
+# Définir la fonction de callback
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),
      Input('stop-trade-button', 'n_clicks'),
      Input('strat-dropdown', 'value'),
-     Input('pair-dropdown', 'value')],
+     Input('pair-dropdown', 'value'),
+     Input('slider-wallet','value'),],
     [State('message-bis', 'children')]
 )
-def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, previous_message):
+def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, previous_message):
     """
     Callback to handle starting and stopping trades.
     """
     if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
-        start_trade(trading_logic, "5m", pair_live, strat_live)
+        start_trade(trading_logic, "5m", pair_live, strat_live, percentage)
         return 'Trade started'
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
@@ -209,7 +223,7 @@ def print_wallet(switch_on, n_clicks, current_style):
              style["display"] = "none"
         if style["display"] == "block":
             # Update the graph only when making it visible
-            df_account = api.getInfoAccount()
+            df_account = api.get_info_account()
             fig_graph = plotAccountInfo(df_account)
             template = "minty" if switch_on else "minty_dark"
             fig_graph.update_layout(template=template)
@@ -271,7 +285,7 @@ def hide_graph(switch_value):
 @callback(
     Output('selected-message', 'children'),
     Input('strat-dropdown', 'value'),
-    Input('pair-dropdown', 'value'),
+    Input('pair-dropdown', 'value'), 
 )
 def update_selected_message(selected_strat, selected_pair):
     """
@@ -279,8 +293,13 @@ def update_selected_message(selected_strat, selected_pair):
     """
     return f"Vous avez choisi la stratégie {selected_strat} sur la paire {selected_pair}."
 
+@callback(
+    Output('percentage-message', 'children'),
+    Input('pair-dropdown', 'value'),
+)
+def update_percentage_message(selected_pair):
+    return f"Quel pourcentage de la paire {selected_pair} souhaitez-vous utiliser?"
 
-# Clientside callback to switch between light and dark themes
 clientside_callback(
     """
     (switchOn) => {
