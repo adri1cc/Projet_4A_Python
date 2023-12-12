@@ -115,13 +115,13 @@ class SimpleSMALive:
                     #                  close=self.__df['Close'],
                     #                  name=f'{self.__pair} Candlestick'),
                     #   row=1, col=1)
-        fig.add_trace(go.Scatter(x=dates, y = self.__df['Close'], mode='lines', name='Values'), row=1, col=1)
+        fig.add_trace(go.Scatter(x=dates, y = self.__df['Close'], mode='lines', name=f"Values of {self.__pair}"), row=1, col=1)
         fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
         fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
         title = 'Backtest ' + self.__pair
         fig.update_layout(title_text=title, showlegend=True)
         fig.update_layout(xaxis_rangeslider_visible=False)
-        print("out")
+        # print("out")
         return fig
 
     def calculate_signal(self):
