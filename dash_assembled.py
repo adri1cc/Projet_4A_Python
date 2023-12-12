@@ -43,7 +43,7 @@ test_mode_switch = html.Div(
 
 ### FIGURES ###
 fig = go.Figure()
-# fig2 = go.Figure()
+fig_graph = go.Figure()
 
 ### BUTTONS ###
 trade_button = dbc.Button("Start bot", id="trade-button", n_clicks=0, color="primary", size="lg")
@@ -130,8 +130,15 @@ app.layout = dbc.Container(
             ],
             className="mt-4", id="Analyse",  # Adjust margin-top as necessary
         ),
-        dbc.Container(
-            [
+        dbc.Container( #PARTIE LIVE
+            [   
+                dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border")
+                            ],
+                            width=10,
+                            style={"position": "relative", "top": "500px", "left": "100px"},
+                        ),
                 dbc.Row(
                     [
                         dbc.Col(pair, style={"position": "absolute", "top": "200px", "left": "500px"}, width=2),
@@ -181,10 +188,46 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, previous_message
     else:
         # No button clicks
         return previous_message
-    
+
+@app.callback(
+    Output("graph-wallet", "figure"),
+    Output("graph-wallet", "style"),
+    [Input("color-mode-switch", "value"),
+     Input('wallet-button', 'n_clicks')],
+    [Input("graph-wallet", "style")],
+)
+def print_wallet(switch_on, n_clicks, current_style):
+    global fig_graph
+
+    style = current_style or {"display": "none"}  # Set a default value for current_style
+
+    if n_clicks is not None and n_clicks > 0:
+        # Button clicked, toggle visibility
+        if style == {"display": "none"}:
+            style = {"display": "block"}
+        else:
+             style["display"] = "none"
+        if style["display"] == "block":
+            # Update the graph only when making it visible
+            df_account = api.getInfoAccount()
+            fig_graph = plotAccountInfo(df_account)
+            template = "minty" if switch_on else "minty_dark"
+            fig_graph.update_layout(template=template)
+    else:
+        # No button click or even number of clicks, keep the current visibility
+        style = current_style or {"display": "none"}
+
+    return fig_graph, style
+
+def plotAccountInfo(df_account):
+    fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+    # Create a pie chart with currencies and their totals
+    #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
+    #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
+    return fig
+
 @callback( #Output("graph2", "figure")
-    [Output("graph", "figure"),
-     ],
+    [Output("graph", "figure"),],
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
@@ -204,7 +247,6 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_va
     # Update the theme template for Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
-    # fig2.update_layout(template=template)
 
     return [fig] #,fig2
 
