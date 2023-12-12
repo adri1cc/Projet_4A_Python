@@ -9,7 +9,7 @@ def create_trading_logic():
     """
     return {'stop_flag': False}
 
-def backtest(value, timeframe, pair):#TODO add strategy gestion
+def backtest(value, timeframe, pair, strategy):
     """
     Perform backtesting using SimpleSMALive strategy.
     
@@ -18,9 +18,17 @@ def backtest(value, timeframe, pair):#TODO add strategy gestion
     :param pair: Trading pair for backtesting.
     :return: Figure object for plotting.
     """
-    sma = strategies.SimpleSMALive(pair, timeframe, value)
-    sma.backtest()
-    fig = sma.plot_figure()
+    strategies_dict = {
+        'SimpleSMA': strategies.SimpleSMALive,
+        # Add other strategies here
+    }
+
+    if strategy not in strategies_dict:
+        raise NotImplementedError(f"{strategy} is not implemented")
+
+    strategy_instance = strategies_dict[strategy](pair, timeframe, value)
+    strategy_instance.backtest()
+    fig = strategy_instance.plot_figure()
     return fig
 
 def start_trade(trading_logic, timeframe, pair, strategy, percentage):

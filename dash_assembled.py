@@ -259,7 +259,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
         previous_backtest_button['backtest_buton'] = n_clicks_backtest
         # Make sure your run_strategy function returns a Plotly figure
         # fig = run_SimpleSMA(slider_value, selected_pair)
-        fig = backtest(slider_value, "5m", selected_pair)
+        fig = backtest(slider_value, "5m", selected_pair,selected_strat)
     # Update the theme template for Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
