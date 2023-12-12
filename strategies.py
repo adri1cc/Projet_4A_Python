@@ -43,7 +43,7 @@ class SimpleSMALive:
         Perform backtesting and update portfolio values.
         """
         print("Calculating backtest ...")
-        since = '2023-01-01 00:00:00'
+        since = '2022-07-21 00:00:00'
         self.__portfolio_values = []
 
         # Generate output directory based on pair and timeframe

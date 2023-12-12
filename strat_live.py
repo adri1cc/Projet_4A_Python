@@ -32,7 +32,7 @@ def start_trade(trading_logic, timeframe, pair, strategy):
     :param pair: Trading pair for live trading.
     :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
     """
-    risk_percentage = 2  # Set the risk percentage as needed
+    risk_percentage = 100  # Set the risk percentage as needed
     investment_threshold = 6
     
     strategies_dict = {
