@@ -5,6 +5,7 @@ from plotly.subplots import make_subplots
 import os
 from tqdm import tqdm
 
+
 class SimpleSMALive:
     def __init__(self, pair, timeframe, sma):
         """
@@ -45,6 +46,7 @@ class SimpleSMALive:
         print("Calculating backtest ...")
         if since is None:
             since = '2023-06-11 00:00:00'
+            
         self.__portfolio_values = []
 
         # Generate output directory based on pair and timeframe
