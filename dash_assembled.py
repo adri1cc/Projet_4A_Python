@@ -94,7 +94,7 @@ strat_backtest = dcc.Dropdown(
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 percentage_message = html.Div(id= 'percentage-message')
-date = None
+date = '2022-06-11 00:00:00'
 trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
