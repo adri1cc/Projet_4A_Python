@@ -19,7 +19,7 @@ class SimpleSMALive:
         self.__timeframe = timeframe
         self.__sma = sma
         self.__df = None
-        self.__liveTrade = False
+        self.__live_trade = False
         self.__portfolio_values = []  # List to store portfolio values
         self.__last_portfolio_value = 1000  # To keep track of the last portfolio value
 
@@ -29,7 +29,7 @@ class SimpleSMALive:
 
         :param side: Boolean indicating the live trade status.
         """
-        self.__liveTrade = side
+        self.__live_trade = side
 
     def get_live_trade(self):
         """
@@ -37,7 +37,31 @@ class SimpleSMALive:
 
         :return: Boolean indicating the live trade status.
         """
-        return self.__liveTrade
+        return self.__live_trade
+    
+    def prepare_backtest_data(self, since):
+        # Generate output directory based on pair and timeframe
+        pair_dir = self.__pair.replace('/', '_')
+        output_dir = f"{pair_dir}_data"
+
+        # Generate output filename based on pair, timeframe, and start date
+        formatted_since = since.replace(':', '-').replace(' ', '_')
+        filename = f"{pair_dir}_{self.__timeframe}_{formatted_since}.csv"
+
+        # Use os.path.join to create the full path
+        path = os.path.join(output_dir, filename)
+        # print(path)
+        return path
+    
+    def load_data(self, path):
+        # Load historical data for backtesting
+        if not os.path.exists(path):
+            print("Need to download data...")
+            historical_data = api.get_historical_data(self.__pair, self.__timeframe, since)
+            historical_data = pd.read_csv(path)
+        else:
+            print("Using existing data...")
+            historical_data = pd.read_csv(path)
 
     def backtest(self, since): #TODO add when buy and when sell to portfolio_values
         """
@@ -49,27 +73,8 @@ class SimpleSMALive:
             
         self.__portfolio_values = []
 
-        # Generate output directory based on pair and timeframe
-        pair_dir = self.__pair.replace('/', '_')
-        output_dir = f"{pair_dir}_data"
-
-        # Generate output filename based on pair, timeframe, and start date
-        formatted_since = since.replace(':', '-').replace(' ', '_')
-        filename = f"{pair_dir}_{self.__timeframe}_{formatted_since}.csv"
-
-        # Use os.path.join to create the full path
-        path = os.path.join(output_dir, filename)
-        print(path)
-
-        # Load historical data for backtesting
-        if not os.path.exists(path):
-            print("Need to download data...")
-            historical_data = api.get_historical_data(self.__pair, self.__timeframe, since)
-            historical_data = pd.read_csv(path)
-        else:
-            print("Using existing data...")
-            historical_data = pd.read_csv(path)
-
+        path = self.prepare_backtest_data(since)
+        historical_data = self.load_data(path)
         self.__df = historical_data.copy()
 
         initial_portfolio_value = 1000
@@ -88,11 +93,11 @@ class SimpleSMALive:
             last_sma = self.__df['SMA'].iloc[i-1]
             signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
-            if signal == "buy" and not self.__liveTrade:
+            if signal == "buy" and not self.__live_trade:
                 self.set_live_trade(True)
                 prix_achat = close_price
 
-            elif signal == "sell" and self.__liveTrade:
+            elif signal == "sell" and self.__live_trade:
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
                 valeur_apres_vente = self.__last_portfolio_value + self.__last_portfolio_value * difference_de_prix / prix_achat
@@ -104,7 +109,7 @@ class SimpleSMALive:
         print(f"Final Portfolio Value: {round(self.__last_portfolio_value, 2)}")
         print(f"Portfolio Return: {100 * (self.__last_portfolio_value / initial_portfolio_value - 1):.2f}%")
         return
-
+        
     def plot_figure(self):
         """
         Plot a figure showing candlestick chart, portfolio values, and portfolio changes.
