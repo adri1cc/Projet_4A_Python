@@ -16,7 +16,7 @@ import logging
 import os
 
 log_file = os.path.join(os.getcwd(), 'app.log')
-
+max_lines = 10
 
 # Configure logging
 logging.basicConfig(filename=log_file, filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -182,7 +182,7 @@ app.layout = dbc.Container(
                 dbc.Col([html.Div([
                                     dcc.Interval(
                                         id='interval-component',
-                                        interval=1 * 1000,  # in milliseconds
+                                        interval=0.5 * 1000,  # in milliseconds
                                         n_intervals=0
                                     ),
                                     dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
@@ -207,12 +207,17 @@ app.layout = dbc.Container(
               dash.dependencies.Input('interval-component', 'n_intervals'))
 def update_logs(n):
     global log_file
-    # Read logs from the log file or any other source
-    with open(log_file, 'r') as log_file_handle:
-        logs = log_file_handle.read()
+    max_lines = 7  # Nombre maximal de lignes à afficher
 
-    # Display logs as HTML
-    return logs
+    # Lisez les messages de journal depuis le fichier ou toute autre source
+    with open(log_file, 'r') as log_file_handle:
+        logs = log_file_handle.readlines()
+
+    # Affichez les dernières lignes jusqu'au nombre maximal défini
+    display_logs = logs[-max_lines:]
+
+    # Retournez les messages de journal pour les afficher
+    return ''.join(display_logs)
 
 
 @app.callback(
