@@ -213,23 +213,26 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
 def print_wallet(switch_on, n_clicks, current_style):
     global fig_graph
 
+    #style = current_style
     style = current_style or {"display": "none"}  # Set a default value for current_style
 
-    if n_clicks is not None and n_clicks > 0:
+    if n_clicks > 0:
         # Button clicked, toggle visibility
         if style == {"display": "none"}:
             style = {"display": "block"}
         else:
-             style["display"] = "none"
+            style["display"] = "none"
         if style["display"] == "block":
             # Update the graph only when making it visible
             df_account = api.get_info_account()
             fig_graph = plotAccountInfo(df_account)
-            template = "minty" if switch_on else "minty_dark"
-            fig_graph.update_layout(template=template)
+            #template = "minty" if switch_on else "minty_dark"
+            #fig_graph.update_layout(template=template)
+
     else:
         # No button click or even number of clicks, keep the current visibility
         style = current_style or {"display": "none"}
+        #style = current_style
 
     return fig_graph, style
 
