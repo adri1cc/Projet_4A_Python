@@ -1,5 +1,6 @@
 import api
 import strategies
+import logging
 
 result = None
 
@@ -53,7 +54,7 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     strategy_instance = strategies_dict[strategy](pair, timeframe, 10)
 
     while not trading_logic['stop_flag']:
-        print("Live trading is running")
+        logging.info("Live trading is running")
 
         result = strategy_instance.calculate_signal()
 
@@ -63,22 +64,22 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
                 investment = get_investment(quantity_buy, percentage) 
 
                 if investment > investment_threshold:
-                    print("Launch buy order")
+                    logging.info("Launch buy order")
                     # place_order(pair, "buy", 6, "market")
                     strategy_instance.set_live_trade(True)
                 else:
-                    print("Not enough funds")
+                    logging.info("Not enough funds")
         elif result == "sell":
             quantity_sell = api.get_quantity(pair, "sell")
 
             if quantity_sell > 0:
-                print("Launch sell order")
+                logging.info("Launch sell order")
                 # place_order(pair, "sell", 6, "market")
                 strategy_instance.set_live_trade(False)
             else:
-                print("Not enough funds")
+                logging.info("Not enough funds")
 
-    print("Live trading is stopped")
+    logging.info("Live trading is stopped")
     del strategy_instance
     
 def stop_trade(trading_logic):
