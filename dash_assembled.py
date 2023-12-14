@@ -12,6 +12,10 @@ import api
 import dash
 from dash.exceptions import PreventUpdate
 from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
@@ -225,8 +229,8 @@ def update_output(value):
         # Tentez de convertir la valeur en objet datetime
         datetime_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         date = str(datetime_obj)
-        print(date)
-        print(type(date))
+        logging.info(date)
+        logging.info(type(date))
         return 'Vous avez saisi une date valide : {}'.format(datetime_obj.strftime('%Y-%m-%d %H:%M:%S'))
     except ValueError:
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'

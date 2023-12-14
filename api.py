@@ -3,6 +3,10 @@ import dontshare_config as dc
 import pandas as pd
 from datetime import datetime
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
@@ -61,11 +65,11 @@ def get_info_account():
         return df_account
 
     except ccxt.NetworkError as e:
-        print('Connection problem: ', type(e).__name__, str(e))
+        logging.info('Connection problem: ', type(e).__name__, str(e))
     except ccxt.ExchangeError as e:
-        print('Exchange error: ', type(e).__name__, str(e))
+        logging.info('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
-        print('An error occurred: ', type(e).__name__, str(e))
+        logging.info('An error occurred: ', type(e).__name__, str(e))
 
 def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = None):
     """
@@ -77,7 +81,7 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
     :param limit: Limit the number of data points to retrieve.
     :return: Pandas DataFrame with OHLCV data.
     """
-    print("Fetching data...")
+    logging.info("Fetching data...")
     try:
         candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
 
@@ -92,16 +96,16 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
         # Create a pandas DataFrame
         columns = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
         df = pd.DataFrame(candle_data, columns=columns)
-        print("Data retrieved")
+        logging.info("Data retrieved")
         # Display the DataFrame
         return df
 
     except ccxt.NetworkError as e:
-        print('Connection problem: ', type(e).__name__, str(e))
+        logging.info('Connection problem: ', type(e).__name__, str(e))
     except ccxt.ExchangeError as e:
-        print('Exchange error: ', type(e).__name__, str(e))
+        logging.info('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
-        print('An error occurred: ', type(e).__name__, str(e))
+        logging.info('An error occurred: ', type(e).__name__, str(e))
 
 def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profit=None, investment_value=None,
                 limit_price=None):
@@ -133,14 +137,14 @@ def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profi
     try:
         # Place the order
         order = exchange.create_order(**order_params)
-        print('Order placed successfully:', order)
+        logging.info('Order placed successfully:', order)
 
     except ccxt.NetworkError as e:
-        print('Connection problem: ', type(e).__name__, str(e))
+        logging.info('Connection problem: ', type(e).__name__, str(e))
     except ccxt.ExchangeError as e:
-        print('Exchange error: ', type(e).__name__, str(e))
+        logging.info('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
-        print('An error occurred: ', type(e).__name__, str(e))
+        logging.info('An error occurred: ', type(e).__name__, str(e))
     return
 
 def get_quantity(pair, side):
@@ -152,7 +156,7 @@ def get_quantity(pair, side):
     :return: Quantity of the currency.
     """
     balance = get_info_account()
-    print(balance['Currency'])
+    logging.info(balance['Currency'])
     quantity = 0
 
     base_currency, quote_currency = pair.split("/")
@@ -160,20 +164,20 @@ def get_quantity(pair, side):
     if side == "sell":
 
         if base_currency not in balance['Currency'].values:
-            print(f"{base_currency} not found in the balance.")
+            logging.info(f"{base_currency} not found in the balance.")
             return 0
 
         quantity = balance['Free'][balance['Currency'] == base_currency].values[0]
-        print(f"Quantity of {base_currency} for {side}: {quantity}")
+        logging.info(f"Quantity of {base_currency} for {side}: {quantity}")
 
     elif side == "buy":
 
         if quote_currency not in balance['Currency'].values:
-            print(f"{quote_currency} not found in the balance.")
+            logging.info(f"{quote_currency} not found in the balance.")
             return 0
 
         quantity = balance['Free'][balance['Currency'] == quote_currency].values[0]
-        print(f"Quantity of {quote_currency} for {side}: {quantity}")
+        logging.info(f"Quantity of {quote_currency} for {side}: {quantity}")
 
     return quantity
 
@@ -190,13 +194,13 @@ def get_historical_data(pair, timeframe, since):#TODO add gestion of out of rang
     ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
     ohlcv_list.append(ohlcv)
     while True:
-        print("Downloading...")
+        logging.info("Downloading...")
         from_ts = ohlcv[-1][0]
         new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
         ohlcv.extend(new_ohlcv)
-        print("1")
+        logging.info("1")
         if len(new_ohlcv) != 1000:
-            print("out")
+            logging.info("out")
             break
     df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
