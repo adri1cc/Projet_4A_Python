@@ -4,7 +4,10 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os
 from tqdm import tqdm
+import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class BaseStrategy:
     def __init__(self, pair, timeframe):
@@ -60,11 +63,11 @@ class BaseStrategy:
         :return: DataFrame containing historical data.
         """
         if not os.path.exists(path):
-            print("Need to download data...")
+            logging.info("Need to download data...")
             historical_data = api.get_historical_data(self._pair, self._timeframe, since)
             historical_data = pd.read_csv(path)
         else:
-            print("Using existing data...")
+            logging.info("Using existing data...")
             historical_data = pd.read_csv(path)
         return historical_data
     
@@ -100,7 +103,7 @@ class BaseStrategy:
         :return: True if data is empty, False otherwise.
         """
         if self._df is None or len(self._df) == 0:
-            print("DataFrame is empty or None.")
+            logging.warning("DataFrame is empty or None.")
             return True
         return False
 
@@ -173,7 +176,7 @@ class SimpleSMALive(BaseStrategy):
         :param since: Start date for the backtest.
         """
         # Utilize inherited methods and attributes
-        print("Calculating backtest ...")
+        logging.info("Calculating backtest ...")
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -186,7 +189,7 @@ class SimpleSMALive(BaseStrategy):
 
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
-        print(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -203,6 +206,7 @@ class SimpleSMALive(BaseStrategy):
             if signal == "buy" and not self.get_live_trade():
                 self.set_live_trade(True)
                 prix_achat = close_price
+                logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
 
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
@@ -213,11 +217,12 @@ class SimpleSMALive(BaseStrategy):
                 self._portfolio_values.append(
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
                      round(difference_de_prix, 2)))
+                logging.info(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
 
-        print("Backtest complete. Performance metrics:")
-        print(f"Initial Portfolio Value: {initial_portfolio_value}")
-        print(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
-        print(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        logging.info("Backtest complete. Performance metrics:")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
         return
 
     # Override or add other methods as needed...
