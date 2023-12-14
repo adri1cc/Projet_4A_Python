@@ -265,10 +265,13 @@ def update_output(value):
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
 def plotAccountInfo(df_account):
-     fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-     # Create a pie chart with currencies and their totals
-     #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
-     #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
+     table_trace = go.Table(
+     header=dict(values=df_account.columns),
+     cells=dict(values=[df_account[col] for col in df_account.columns])
+     )
+     fig = go.Figure(data =[table_trace])
+     #Previous bar used
+     #fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
      return fig
 
 # Separate callback for color switch
