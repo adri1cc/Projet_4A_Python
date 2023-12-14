@@ -62,6 +62,7 @@ class SimpleSMALive:
         else:
             print("Using existing data...")
             historical_data = pd.read_csv(path)
+        return historical_data
 
     def backtest(self, since): #TODO add when buy and when sell to portfolio_values
         """
