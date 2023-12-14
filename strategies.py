@@ -157,7 +157,7 @@ class SimpleSMALive:
             self.__df = api.get_ohlcv(self.__pair, self.__timeframe, limit=self.__sma + 1)
         new_data = api.get_ohlcv(self.__pair, self.__timeframe, limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
-        self.__df = pd.drop_duplicates(subset=['Timestamp'], keep='last')
+        self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
 
     def is_data_empty(self):
         """
