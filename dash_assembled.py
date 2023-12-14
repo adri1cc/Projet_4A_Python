@@ -57,6 +57,7 @@ wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks
 previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
 previous_backtest_button = {'backtest_buton': 0}
+previous_wallet_button = {'wallet_buton': 0}
 
 ### LES LISTES DEROULANTES ###
 
@@ -146,7 +147,7 @@ app.layout = dbc.Container(
             [   
                 dbc.Col(
                             [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border")
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none"})
                             ],
                             width=10,
                             style={"position": "relative", "top": "500px", "left": "100px"},
@@ -230,68 +231,58 @@ def update_output(value):
     except ValueError:
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
-# @app.callback(
-#     Output("graph-wallet", "figure"),
-#     Output("graph-wallet", "style"),
-#     [Input("color-mode-switch", "value"),
-#      Input('wallet-button', 'n_clicks')],
-#     [Input("graph-wallet", "style")],
-# )
-# def print_wallet(switch_on, n_clicks, current_style):
-#     global fig_graph
+def plotAccountInfo(df_account):
+     fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+     # Create a pie chart with currencies and their totals
+     #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
+     #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
+     return fig
 
-#     style = current_style or {"display": "none"}  # Set a default value for current_style
-
-#     if n_clicks is not None and n_clicks > 0:
-#         # Button clicked, toggle visibility
-#         if style == {"display": "none"}:
-#             style = {"display": "block"}
-#         else:
-#              style["display"] = "none"
-#         if style["display"] == "block":
-#             # Update the graph only when making it visible
-#             df_account = api.get_info_account()
-#             fig_graph = plotAccountInfo(df_account)
-#             template = "minty" if switch_on else "minty_dark"
-#             fig_graph.update_layout(template=template)
-#     else:
-#         # No button click or even number of clicks, keep the current visibility
-#         style = current_style or {"display": "none"}
-
-#     return fig_graph, style
-
-# def plotAccountInfo(df_account):
-#     fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-#     # Create a pie chart with currencies and their totals
-#     #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
-#     #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
-#     return fig
+# Separate callback for color switch
+@app.callback(
+    Output("graph-wallet", "style"),
+    Input('wallet-button', 'n_clicks'),
+    prevent_initial_call=True
+)
+def toggle_graph_visibility(n_clicks):
+    style = {"display": "block" if n_clicks % 2 == 1 else "none"}
+    return style
 
 @callback( #Output("graph2", "figure")
-    [Output("graph", "figure"),],
+    [Output("graph", "figure"),
+     Output("graph-wallet", "figure")],
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
      Input("backtest-button", "n_clicks"),
-     Input('slider', 'value')],
+     Input('slider', 'value'),
+     Input('wallet-button', 'n_clicks'),
+     Input("graph-wallet", "style")],
     allow_duplicate=True
 )
-def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, slider_value):
+def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, slider_value, n_clicks_wallet, wallet_style):
     """
     Callback to update figures based on selected parameters.
     """
     global date
     global fig # Use global to update these global variables
+    global fig_graph
     if n_clicks_backtest is not None and n_clicks_backtest > previous_backtest_button['backtest_buton']:
         previous_backtest_button['backtest_buton'] = n_clicks_backtest
         # Make sure your run_strategy function returns a Plotly figure
         # fig = run_SimpleSMA(slider_value, selected_pair)
         fig = backtest(slider_value, "5m", selected_pair,selected_strat,date)
     # Update the theme template for Plotly Express
+    if n_clicks_wallet is not None and wallet_style["display"] == "block":
+        previous_wallet_button['wallet_buton'] = n_clicks_wallet
+        df_account = api.get_info_account()
+        fig_graph = plotAccountInfo(df_account)
+
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
+    fig_graph.update_layout(template=template)
 
-    return [fig] #,fig2
+    return fig, fig_graph #,fig2
 
 @callback(
     Output("Analyse", "style"),
