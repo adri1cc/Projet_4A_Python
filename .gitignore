@@ -3,3 +3,4 @@ dontshare_config.py
 \_pycache_
 **/.DS_Store
 **/__pycache__/
+app.log
