@@ -177,7 +177,7 @@ def get_quantity(pair, side):
 
     return quantity
 
-def get_historical_data(pair, timeframe, since):
+def get_historical_data(pair, timeframe, since):#TODO add gestion of out of range (missing values)
     """
     Get historical data for backtesting.
 
