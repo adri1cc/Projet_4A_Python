@@ -6,9 +6,6 @@ import os
 from tqdm import tqdm
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 class BaseStrategy:
     def __init__(self, pair, timeframe):
         """

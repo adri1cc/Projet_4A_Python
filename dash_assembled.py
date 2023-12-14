@@ -13,10 +13,13 @@ import dash
 from dash.exceptions import PreventUpdate
 from datetime import datetime
 import logging
+import os
+
+log_file = os.path.join(os.getcwd(), 'app.log')
+
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+logging.basicConfig(filename=log_file, filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
 
@@ -175,7 +178,16 @@ app.layout = dbc.Container(
                     ],
                     width=10,
                     style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
-                )
+                ),
+                dbc.Col([html.Div([
+                                    dcc.Interval(
+                                        id='interval-component',
+                                        interval=1 * 1000,  # in milliseconds
+                                        n_intervals=0
+                                    ),
+                                    dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
+                                ])
+                ])
             ],id="Live1",
         ),
         dbc.Container(
@@ -191,6 +203,18 @@ app.layout = dbc.Container(
     ]
 )
 # Définir la fonction de callback
+@app.callback(dash.dependencies.Output('log-output', 'value'),
+              dash.dependencies.Input('interval-component', 'n_intervals'))
+def update_logs(n):
+    global log_file
+    # Read logs from the log file or any other source
+    with open(log_file, 'r') as log_file_handle:
+        logs = log_file_handle.read()
+
+    # Display logs as HTML
+    return logs
+
+
 @app.callback(
     Output('message-bis', 'children'),
     [Input('trade-button', 'n_clicks'),

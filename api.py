@@ -5,9 +5,6 @@ from datetime import datetime
 import os
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
     'apiKey': dc.API_KEY_MEXC,  # Public API key

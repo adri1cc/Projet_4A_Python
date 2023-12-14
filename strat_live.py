@@ -2,9 +2,6 @@ import api
 import strategies
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 result = None
 
 def create_trading_logic():
