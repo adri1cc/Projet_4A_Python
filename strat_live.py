@@ -9,7 +9,7 @@ def create_trading_logic():
     """
     return {'stop_flag': False}
 
-def backtest(value, timeframe, pair):#TODO add strategy gestion
+def backtest(value, timeframe, pair, strategy, date):
     """
     Perform backtesting using SimpleSMALive strategy.
     
@@ -18,9 +18,17 @@ def backtest(value, timeframe, pair):#TODO add strategy gestion
     :param pair: Trading pair for backtesting.
     :return: Figure object for plotting.
     """
-    sma = strategies.SimpleSMALive(pair, timeframe, value)
-    sma.backtest()
-    fig = sma.plot_figure()
+    strategies_dict = {
+        'SimpleSMA': strategies.SimpleSMALive,
+        # Add other strategies here
+    }
+
+    if strategy not in strategies_dict:
+        raise NotImplementedError(f"{strategy} is not implemented")
+
+    strategy_instance = strategies_dict[strategy](pair, timeframe, value)
+    strategy_instance.backtest(date)
+    fig = strategy_instance.plot_figure()
     return fig
 
 def start_trade(trading_logic, timeframe, pair, strategy, percentage):
@@ -32,7 +40,6 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     :param pair: Trading pair for live trading.
     :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
     """
-    #risk_percentage = 2  # Set the risk percentage as needed
     investment_threshold = 6
     
     strategies_dict = {
@@ -44,8 +51,6 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
         raise NotImplementedError(f"{strategy} is not implemented")
 
     strategy_instance = strategies_dict[strategy](pair, timeframe, 10)
-    print("Live trading is running")
-    print(percentage)
 
     while not trading_logic['stop_flag']:
         print("Live trading is running")
@@ -55,7 +60,7 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
         if not strategy_instance.get_live_trade():
             if result == "buy":
                 quantity_buy = api.get_quantity(pair, "buy")
-                investment = get_investment(quantity_buy, percentage) #Replaced risk_percentage with an output value percentage
+                investment = get_investment(quantity_buy, percentage) 
 
                 if investment > investment_threshold:
                     print("Launch buy order")

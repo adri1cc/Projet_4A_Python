@@ -38,12 +38,13 @@ class SimpleSMALive:
         """
         return self.__liveTrade
 
-    def backtest(self):
+    def backtest(self, since): #TODO add when buy and when sell to portfolio_values
         """
         Perform backtesting and update portfolio values.
         """
         print("Calculating backtest ...")
-        since = '2022-07-21 00:00:00'
+        if since is None:
+            since = '2023-06-11 00:00:00'
         self.__portfolio_values = []
 
         # Generate output directory based on pair and timeframe
@@ -51,7 +52,8 @@ class SimpleSMALive:
         output_dir = f"{pair_dir}_data"
 
         # Generate output filename based on pair, timeframe, and start date
-        filename = f"{pair_dir}_{self.__timeframe}_{since.replace(':', '-').replace(' ', '_')}.csv"
+        formatted_since = since.replace(':', '-').replace(' ', '_')
+        filename = f"{pair_dir}_{self.__timeframe}_{formatted_since}.csv"
 
         # Use os.path.join to create the full path
         path = os.path.join(output_dir, filename)
@@ -61,6 +63,7 @@ class SimpleSMALive:
         if not os.path.exists(path):
             print("Need to download data...")
             historical_data = api.get_historical_data(self.__pair, self.__timeframe, since)
+            historical_data = pd.read_csv(path)
         else:
             print("Using existing data...")
             historical_data = pd.read_csv(path)
@@ -108,19 +111,20 @@ class SimpleSMALive:
         dates = self.__df.index
 
         fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-        fig.add_trace(go.Candlestick(x=dates,
-                                     open=self.__df['Open'],
-                                     high=self.__df['High'],
-                                     low=self.__df['Low'],
-                                     close=self.__df['Close'],
-                                     name=f'{self.__pair} Candlestick'),
-                      row=1, col=1)
+        # fig.add_trace(go.Candlestick(x=dates,
+                    #                  open=self.__df['Open'],
+                    #                  high=self.__df['High'],
+                    #                  low=self.__df['Low'],
+                    #                  close=self.__df['Close'],
+                    #                  name=f'{self.__pair} Candlestick'),
+                    #   row=1, col=1)
+        fig.add_trace(go.Scatter(x=dates, y = self.__df['Close'], mode='lines', name=f"Values of {self.__pair}"), row=1, col=1)
         fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
         fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
         title = 'Backtest ' + self.__pair
         fig.update_layout(title_text=title, showlegend=True)
         fig.update_layout(xaxis_rangeslider_visible=False)
-        print("out")
+        # print("out")
         return fig
 
     def calculate_signal(self):
@@ -145,7 +149,7 @@ class SimpleSMALive:
             self.__df = api.get_ohlcv(self.__pair, self.__timeframe, limit=self.__sma + 1)
         new_data = api.get_ohlcv(self.__pair, self.__timeframe, limit=1)
         self.__df = pd.concat([self.__df, new_data], ignore_index=True)
-        self.__df = self.__df.drop_duplicates(subset=['Timestamp'], keep='last')
+        self.__df = pd.drop_duplicates(subset=['Timestamp'], keep='last')
 
     def is_data_empty(self):
         """

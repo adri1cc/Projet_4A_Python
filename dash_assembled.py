@@ -9,6 +9,9 @@ import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 import api
+import dash
+from dash.exceptions import PreventUpdate
+from datetime import datetime
 
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
@@ -53,6 +56,7 @@ stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_click
 wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
 previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
+previous_backtest_button = {'backtest_buton': 0}
 
 ### LES LISTES DEROULANTES ###
 
@@ -61,7 +65,7 @@ pair = dcc.Dropdown(
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='Paire',id='pair-dropdown',
+                            ],value='BTC/USDT',id='pair-dropdown',
                     )
 
 strat = dcc.Dropdown(
@@ -69,7 +73,7 @@ strat = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-dropdown',
+                            ],value='SimpleSMA',id='strat-dropdown',
                     )
 pair_backtest = dcc.Dropdown(
                     options=[
@@ -84,13 +88,13 @@ strat_backtest = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='Stratégie',id='strat-backtest-dropdown',
+                            ],value='SimpleSMA',id='strat-backtest-dropdown',
                     )
 
 selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
 message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
 percentage_message = html.Div(id= 'percentage-message')
-
+date = None
 trading_logic = create_trading_logic()
 
 # Utilisez dbc.Row et dbc.Col pour organiser les éléments
@@ -114,6 +118,11 @@ app.layout = dbc.Container(
 
                         dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "100px"}, width=2),
                         dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "100px"}, width=2),
+                        dbc.Col(html.Div([
+                                        html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
+                                        dcc.Input(id='input-date', type='text'),
+                                        html.Div(id='output-date')
+                                    ]), style={"position": "absolute", "top": "400px", "left": "100px"}, width=2),
                     ]
                 ),
                 dbc.Row(
@@ -124,7 +133,7 @@ app.layout = dbc.Container(
                                 dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
                             ],
                             width=10,
-                            style={"position": "relative", "left": "250px"},
+                            style={"position": "relative", "left": "225px"},
                         ),
                         # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
 
@@ -202,46 +211,61 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
     else:
         # No button clicks
         return previous_message
-
 @app.callback(
-    Output("graph-wallet", "figure"),
-    Output("graph-wallet", "style"),
-    [Input("color-mode-switch", "value"),
-     Input('wallet-button', 'n_clicks')],
-    [Input("graph-wallet", "style")],
+    dash.dependencies.Output('output-date', 'children'),
+    [dash.dependencies.Input('input-date', 'value')]
 )
-def print_wallet(switch_on, n_clicks, current_style):
-    global fig_graph
+def update_output(value):
+    global date
+    if not value:
+        raise PreventUpdate  # Ne rien faire si la valeur est vide
 
-    #style = current_style
-    style = current_style or {"display": "none"}  # Set a default value for current_style
+    try:
+        # Tentez de convertir la valeur en objet datetime
+        datetime_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        date = str(datetime_obj)
+        print(date)
+        print(type(date))
+        return 'Vous avez saisi une date valide : {}'.format(datetime_obj.strftime('%Y-%m-%d %H:%M:%S'))
+    except ValueError:
+        return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
-    if n_clicks > 0:
-        # Button clicked, toggle visibility
-        if style == {"display": "none"}:
-            style = {"display": "block"}
-        else:
-            style["display"] = "none"
-        if style["display"] == "block":
-            # Update the graph only when making it visible
-            df_account = api.get_info_account()
-            fig_graph = plotAccountInfo(df_account)
-            #template = "minty" if switch_on else "minty_dark"
-            #fig_graph.update_layout(template=template)
+# @app.callback(
+#     Output("graph-wallet", "figure"),
+#     Output("graph-wallet", "style"),
+#     [Input("color-mode-switch", "value"),
+#      Input('wallet-button', 'n_clicks')],
+#     [Input("graph-wallet", "style")],
+# )
+# def print_wallet(switch_on, n_clicks, current_style):
+#     global fig_graph
 
-    else:
-        # No button click or even number of clicks, keep the current visibility
-        style = current_style or {"display": "none"}
-        #style = current_style
+#     style = current_style or {"display": "none"}  # Set a default value for current_style
 
-    return fig_graph, style
+#     if n_clicks is not None and n_clicks > 0:
+#         # Button clicked, toggle visibility
+#         if style == {"display": "none"}:
+#             style = {"display": "block"}
+#         else:
+#              style["display"] = "none"
+#         if style["display"] == "block":
+#             # Update the graph only when making it visible
+#             df_account = api.get_info_account()
+#             fig_graph = plotAccountInfo(df_account)
+#             template = "minty" if switch_on else "minty_dark"
+#             fig_graph.update_layout(template=template)
+#     else:
+#         # No button click or even number of clicks, keep the current visibility
+#         style = current_style or {"display": "none"}
 
-def plotAccountInfo(df_account):
-    fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-    # Create a pie chart with currencies and their totals
-    #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
-    #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
-    return fig
+#     return fig_graph, style
+
+# def plotAccountInfo(df_account):
+#     fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+#     # Create a pie chart with currencies and their totals
+#     #fig = go.Figure(data=[go.Pie(labels=df_account['Currency'], values=df_account['Total'])])
+#     #fig.update_layout(title='Account Balance by Currency', template='plotly_dark')  # You can set a different template if needed
+#     return fig
 
 @callback( #Output("graph2", "figure")
     [Output("graph", "figure"),],
@@ -252,15 +276,17 @@ def plotAccountInfo(df_account):
      Input('slider', 'value')],
     allow_duplicate=True
 )
-def update_figures(switch_on, selected_strat, selected_pair, n_clicks, slider_value):
+def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, slider_value):
     """
     Callback to update figures based on selected parameters.
     """
+    global date
     global fig # Use global to update these global variables
-    if n_clicks > 0:
+    if n_clicks_backtest is not None and n_clicks_backtest > previous_backtest_button['backtest_buton']:
+        previous_backtest_button['backtest_buton'] = n_clicks_backtest
         # Make sure your run_strategy function returns a Plotly figure
         # fig = run_SimpleSMA(slider_value, selected_pair)
-        fig = backtest(slider_value, "5m", selected_pair)
+        fig = backtest(slider_value, "5m", selected_pair,selected_strat,date)
     # Update the theme template for Plotly Express
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
@@ -282,6 +308,7 @@ def hide_graph(switch_value):
         # If the switch is on, show the graph and the button
         return {"display": "block"}, {"display": "none"}, {"display": "none"}
     else:
+        
         # If the switch is off, hide the graph and the button
         return {"display": "none"}, {"display": "block"}, {"display": "block"}
 
