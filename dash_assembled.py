@@ -259,16 +259,6 @@ def update_output(value):
     except ValueError:
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
-def plotAccountInfo(df_account):
-     table_trace = go.Table(
-     header=dict(values=df_account.columns),
-     cells=dict(values=[df_account[col] for col in df_account.columns])
-     )
-     fig = go.Figure(data =[table_trace])
-     #Previous bar used
-     #fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-     return fig
-
 # Separate callback for color switch
 @app.callback(
     Output("graph-wallet", "style"),
@@ -307,7 +297,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
     if n_clicks_wallet is not None and wallet_style["display"] == "block":
         previous_wallet_button['wallet_buton'] = n_clicks_wallet
         df_account = api.get_info_account()
-        fig_graph = plotAccountInfo(df_account)
+        fig_graph = api.plot_info_account(df_account)
 
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)

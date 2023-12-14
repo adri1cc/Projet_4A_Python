@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import logging
+import plotly.graph_objects as go
 
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
@@ -67,6 +68,16 @@ def get_info_account():
         logging.info('Exchange error: ', type(e).__name__, str(e))
     except Exception as e:
         logging.info('An error occurred: ', type(e).__name__, str(e))
+
+def plot_info_account(df_account):
+     table_trace = go.Table(
+     header=dict(values=df_account.columns),
+     cells=dict(values=[df_account[col] for col in df_account.columns])
+     )
+     fig = go.Figure(data =[table_trace])
+     #Previous bar used
+     #fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
+     return fig
 
 def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = None):
     """
