@@ -179,15 +179,7 @@ app.layout = dbc.Container(
                     width=10,
                     style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
                 ),
-                dbc.Col([html.Div([
-                                    dcc.Interval(
-                                        id='interval-component',
-                                        interval=0.5 * 1000,  # in milliseconds
-                                        n_intervals=0
-                                    ),
-                                    dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
-                                ])
-                ])
+                
             ],id="Live1",
         ),
         dbc.Container(
@@ -200,6 +192,17 @@ app.layout = dbc.Container(
     className="d-grid gap-2 d-md-block",),
             ],id="Live2",
         ),
+        dbc.Container([
+            dbc.Col([html.Div([
+                                    dcc.Interval(
+                                        id='interval-component',
+                                        interval=0.5 * 1000,  # in milliseconds
+                                        n_intervals=0
+                                    ),
+                                    dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
+                                ])
+                ])
+        ],id = "logs", fluid = True)
     ]
 )
 # Définir la fonction de callback
