@@ -51,6 +51,7 @@ test_mode_switch = html.Div(
     ],
     style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
 )
+
 logs_switch = html.Div(
     [
         dbc.Row(
@@ -84,7 +85,7 @@ pair = dcc.Dropdown(
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='BTC/USDT',id='pair-dropdown',
+                            ],value='BTC/USDT',id='pair-dropdown',style={'color': 'black'}
                     )
 
 strat = dcc.Dropdown(
@@ -92,14 +93,14 @@ strat = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='SimpleSMA',id='strat-dropdown',
+                            ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
 pair_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='BTC/USDT',id='pair-backtest-dropdown',
+                            ],value='BTC/USDT',id='pair-backtest-dropdown',style={'color': 'black'}
                     )
 
 strat_backtest = dcc.Dropdown(
@@ -107,11 +108,11 @@ strat_backtest = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='SimpleSMA',id='strat-backtest-dropdown',
+                            ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
 
-selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
-message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
+selected_message = html.Div(id='selected-message')
+message_bis = html.Div(id='message-bis', children='En attente')
 percentage_message = html.Div(id= 'percentage-message')
 date = '2022-06-11 00:00:00'
 trading_logic = create_trading_logic()
@@ -127,22 +128,34 @@ app.layout = dbc.Container(
                 dbc.Col(logs_switch, width=2),
             ],
         ),
+        dbc.Container([
+            dbc.Col([html.Div([
+                                    dcc.Interval(
+                                        id='interval-component',
+                                        interval=0.5 * 1000,  # in milliseconds
+                                        n_intervals=0
+                                    ),
+                                    dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
+                                ])
+                ])
+        ],id = "logs", fluid = True
+        ),
         dbc.Container( # ANALYSIS PART
             [
                 dbc.Row(
                     [
                         dbc.Col([
-                            html.Div([backtest_button], style={"position": "absolute", "top": "100px", "left": "120px"}, className="d-grid gap-2 d-md-block",)
+                            html.Div([backtest_button], style={"position": "relative", "top": "100px", "left": "120px"}, className="d-grid gap-2 d-md-block",)
 
                             ]),
 
-                        dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "100px"}, width=2),
-                        dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "100px"}, width=2),
+                        dbc.Col(pair_backtest, style={"position": "relative", "top": "200px", "left": "100px"}, width=2),
+                        dbc.Col(strat_backtest, style={"position": "relative", "top": "300px", "left": "100px"}, width=2),
                         dbc.Col(html.Div([
                                         html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
                                         dcc.Input(id='input-date', type='text'),
                                         html.Div(id='output-date')
-                                    ]), style={"position": "absolute", "top": "400px", "left": "100px"}, width=2),
+                                    ]), style={"position": "relative", "top": "400px", "left": "100px"}, width=2),
                     ]
                 ),
                 dbc.Row(
@@ -164,32 +177,26 @@ app.layout = dbc.Container(
         ),
         dbc.Container( #PARTIE LIVE
             [   
-                dbc.Col(
-                            [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none"})
-                            ],
-                            width=10,
-                            style={"position": "relative", "top": "500px", "left": "100px"},
-                        ),
+
                 dbc.Row(
                     [
-                        dbc.Col(pair, style={"position": "absolute", "top": "200px", "left": "500px"}, width=2),
-                        dbc.Col(strat, style={"position": "absolute", "top": "200px", "left": "900px"}, width=2),
+                        dbc.Col(pair, style={"position": "relative", "top": "100px", "left": "500px"}, width=2),
+                        dbc.Col(strat, style={"position": "relative", "top": "100px", "left": "600px"}, width=2),
                     ]
                 ),
-                dbc.Row(
+                dbc.Col(
                     [
-                        selected_message,
-                        message_bis,
-                    ],
+                        dbc.Row(selected_message),
+                        dbc.Row(message_bis),
+                    ],style={"position": "relative", "top": "0px", "left": "500px"}, width=10
                 ),
                 dbc.Col(
                     [
-                        percentage_message,
+                        dbc.Row(percentage_message,style={"position": "relative", "top": "0px", "left": "20px"}),
                         dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
                     ],
                     width=10,
-                    style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
+                    style={"position": "relative", "top": "0px", "left": "00px", 'width': '400px'},
                 ),
                 dbc.Row(
                         [
@@ -201,21 +208,18 @@ app.layout = dbc.Container(
                 className="d-grid gap-2 d-md-block",),
                         ]
                     ),
+                dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
+                            ],
+                            width=10,
+                            style={"position": "relative", "top": "200px", "left": "100px"},
+                        ),
                 
             ],id="Live1",
         ),
-        dbc.Container([
-            dbc.Col([html.Div([
-                                    dcc.Interval(
-                                        id='interval-component',
-                                        interval=0.5 * 1000,  # in milliseconds
-                                        n_intervals=0
-                                    ),
-                                    dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
-                                ])
-                ])
-        ],id = "logs", fluid = True)
-    ]
+
+    ],fluid=True
 )
 # Définir la fonction de callback
 @app.callback(dash.dependencies.Output('log-output', 'value'),
@@ -347,7 +351,6 @@ def update_page_logs(switch_value, logs_button):
     """
     Callback to dynamically adjust the layout based on the test mode and logs visibility.
     """
-    print(f"Switch Value: {switch_value}, Logs Button: {logs_button}")
     logs_style = {"display": "none"}
     top = "0px" if logs_button else "0px"
     analyse_display = "block" if switch_value else "none"
@@ -360,6 +363,7 @@ def update_page_logs(switch_value, logs_button):
     analyse = {"display": analyse_display, "position": "relative", "top": top}
 
     return analyse, live, logs_style
+
 
 @callback(
     Output('selected-message', 'children'),
@@ -377,7 +381,7 @@ def update_selected_message(selected_strat, selected_pair):
     Input('pair-dropdown', 'value'),
 )
 def update_percentage_message(selected_pair):
-    return f"Quel pourcentage de la paire {selected_pair} souhaitez-vous utiliser?"
+    return f"Quel risque pour {selected_pair} souhaitez-vous utiliser ?"
 
 clientside_callback(
     """
