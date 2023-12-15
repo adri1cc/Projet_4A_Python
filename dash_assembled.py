@@ -142,38 +142,42 @@ app.layout = dbc.Container(
         ),
         dbc.Container( # ANALYSIS PART
             [
-                dbc.Row(
+                dbc.Col(
                     [
-                        dbc.Col([
-                            html.Div([backtest_button], style={"position": "relative", "top": "100px", "left": "120px"}, className="d-grid gap-2 d-md-block",)
+                        dbc.Row([
+                            html.Div([backtest_button], style={"position": "relative", "top": "100px"}, className="d-grid gap-2 d-md-block",)
 
                             ]),
 
-                        dbc.Col(pair_backtest, style={"position": "relative", "top": "200px", "left": "100px"}, width=2),
-                        dbc.Col(strat_backtest, style={"position": "relative", "top": "300px", "left": "100px"}, width=2),
-                        dbc.Col(html.Div([
-                                        html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
-                                        dcc.Input(id='input-date', type='text'),
-                                        html.Div(id='output-date')
-                                    ]), style={"position": "relative", "top": "400px", "left": "100px"}, width=2),
-                    ]
-                ),
-                dbc.Row(
-                    [
+                        dbc.Row(dbc.Col(pair_backtest, style={"position": "relative", "top": "200px"}, width=2)),
+                        dbc.Row(dbc.Col(strat_backtest, style={"position": "relative", "top": "250px"}, width=2)),
                         dbc.Col(
                             [
+                                html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(dcc.Input(id='input-date', type='text')),
+                                        dbc.Col(html.Div(id='output-date')),
+                                    ]
+                                )
+                            ],
+                            style={"position": "relative", "top": "300px"},
+                            width=2,
+                        )
+
+                    ],style={"position": "relative", "left": "0px"}
+                ),
+                dbc.Col(
+                    [
                                 dcc.Graph(id="graph", figure=fig, className="border"),
                                 dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
                             ],
                             width=10,
-                            style={"position": "relative", "left": "225px"},
+                            style={"position": "relative", "left": "200px", "top": "-100px"},
                         ),
                         # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
-
-                    ]
-                ),
             ],
-            className="mt-4", id="Analyse",  # Adjust margin-top as necessary
+            className="mt-4", id="Analyse",style={"position": "relative", "left": "00px", "top": "-100px"}  # Adjust margin-top as necessary
         ),
         dbc.Container( #PARTIE LIVE
             [   
@@ -212,7 +216,7 @@ app.layout = dbc.Container(
                             [
                                 dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
                             ],
-                            width=10,
+                            width=12,
                             style={"position": "relative", "top": "200px", "left": "100px"},
                         ),
                 
@@ -352,15 +356,16 @@ def update_page_logs(switch_value, logs_button):
     Callback to dynamically adjust the layout based on the test mode and logs visibility.
     """
     logs_style = {"display": "none"}
-    top = "0px" if logs_button else "0px"
+    analyse_top = "-100px" if logs_button else "0px"
+    live_top = "0px" if logs_button else "0px"
     analyse_display = "block" if switch_value else "none"
     live_display = "block" if not switch_value else "none"
 
     if logs_button:  # Show logs
         logs_style = {"position": "relative", "top": "0px", "left": "0px", "width": "100%", "z-index": 1}
 
-    live = {"display": live_display, "position": "relative", "top": top}
-    analyse = {"display": analyse_display, "position": "relative", "top": top}
+    live = {"display": live_display, "position": "relative", "top": live_top}
+    analyse = {"display": analyse_display, "position": "relative", "top": analyse_top}
 
     return analyse, live, logs_style
 

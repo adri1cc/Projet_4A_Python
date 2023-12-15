@@ -4,4 +4,3 @@ dontshare_config.py
 **/.DS_Store
 **/__pycache__/
 app.log
-tampon.py
