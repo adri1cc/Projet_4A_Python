@@ -51,7 +51,18 @@ test_mode_switch = html.Div(
     ],
     style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
 )
-
+logs_switch = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(html.Label("Logs"), width="auto"),  # Positionne "Basique" à gauche
+                dbc.Col(dbc.Switch(id="logs-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
+            ],
+            className="align-items-center",  # Centre les éléments verticalement dans la ligne
+        ),
+    ],
+    style={"position": "absolute", "top": "50px", "right": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
+)
 ### LES FIGURES ###
 fig = go.Figure()
 fig_graph = go.Figure()
@@ -113,6 +124,7 @@ app.layout = dbc.Container(
             [
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
+                dbc.Col(logs_switch, width=2),
             ],
         ),
         dbc.Container( # ANALYSIS PART
@@ -179,18 +191,18 @@ app.layout = dbc.Container(
                     width=10,
                     style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
                 ),
+                dbc.Row(
+                        [
+                            html.Div([trade_button], style={"position": "relative", "top": "15px"},
+                className="d-grid gap-2 d-md-block",),
+                            html.Div([stop_trade_button], style={"position": "relative", "top": "50px"},
+                className="d-grid gap-2 d-md-block",),
+                            html.Div([wallet_button], style={"position": "relative", "top": "100px"},
+                className="d-grid gap-2 d-md-block",),
+                        ]
+                    ),
                 
             ],id="Live1",
-        ),
-        dbc.Container(
-            [
-                html.Div([trade_button], style={"position": "absolute", "top": "250px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-                html.Div([stop_trade_button], style={"position": "absolute", "top": "350px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-                html.Div([wallet_button], style={"position": "absolute", "top": "450px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-            ],id="Live2",
         ),
         dbc.Container([
             dbc.Col([html.Div([
@@ -323,24 +335,31 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
 
     return fig, fig_graph #,fig2
 
-@callback(
-    Output("Analyse", "style"),
-    Output("Live1", "style"),
-    Output("Live2", "style"),
-    Input("test-mode-switch", "value"),
+@app.callback(
+    [Output("Analyse", "style"),
+     Output("Live1", "style"),
+     Output("logs", "style")],
+    [Input("test-mode-switch", "value"),
+     Input("logs-switch", "value")],
     allow_duplicate=True,
 )
-def hide_graph(switch_value):
+def update_page_logs(switch_value, logs_button):
     """
-    Callback to show or hide sections of the dashboard based on the test mode.
+    Callback to dynamically adjust the layout based on the test mode and logs visibility.
     """
-    if switch_value:
-        # If the switch is on, show the graph and the button
-        return {"display": "block"}, {"display": "none"}, {"display": "none"}
-    else:
-        
-        # If the switch is off, hide the graph and the button
-        return {"display": "none"}, {"display": "block"}, {"display": "block"}
+    print(f"Switch Value: {switch_value}, Logs Button: {logs_button}")
+    logs_style = {"display": "none"}
+    top = "0px" if logs_button else "0px"
+    analyse_display = "block" if switch_value else "none"
+    live_display = "block" if not switch_value else "none"
+
+    if logs_button:  # Show logs
+        logs_style = {"position": "relative", "top": "0px", "left": "0px", "width": "100%", "z-index": 1}
+
+    live = {"display": live_display, "position": "relative", "top": top}
+    analyse = {"display": analyse_display, "position": "relative", "top": top}
+
+    return analyse, live, logs_style
 
 @callback(
     Output('selected-message', 'children'),
