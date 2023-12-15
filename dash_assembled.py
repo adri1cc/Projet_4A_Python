@@ -112,7 +112,7 @@ strat_backtest = dcc.Dropdown(
                     )
 
 selected_message = html.Div(id='selected-message')
-message_bis = html.Div(id='message-bis', children='En attente')
+message_bis = html.Div(id='message-bis', children='En attente')#TODO crtl F explicit name
 percentage_message = html.Div(id= 'percentage-message')
 date = '2022-06-11 00:00:00'
 trading_logic = create_trading_logic()
@@ -218,7 +218,7 @@ app.layout = dbc.Container(
                             ],
                             width=12,
                             style={"position": "relative", "top": "200px", "left": "100px"},
-                        ),
+                        ),#TODO change position and size
                 
             ],id="Live1",
         ),
@@ -260,7 +260,7 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
         start_trade(trading_logic, "5m", pair_live, strat_live, percentage)
-        return 'Trade started'
+        return 'Trade started'# TODO resolve print
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
         stop_trade(trading_logic)
