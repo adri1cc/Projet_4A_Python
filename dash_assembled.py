@@ -5,15 +5,16 @@ This script contains the code for a trading dashboard using Dash.
 from datetime import datetime
 import os
 
-import api
-import dash
 import logging
 import plotly.express as px
 import plotly.graph_objects as go
+import dash
 import dash_bootstrap_components as dbc
 from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
+
+import api
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 log_file = os.path.join(os.getcwd(), 'app.log')
@@ -71,11 +72,11 @@ fig_graph = go.Figure()
 
 
 ### LES BOUTONS ###
-trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
-stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
-wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
+trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary", size="lg")
+stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary", size="lg")
+wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary", size="lg")
 previous_state = {'trade': 0, 'stop': 0}
-backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
+backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary", size="lg")
 previous_backtest_button = {'backtest_buton': 0}
 previous_wallet_button = {'wallet_buton': 0}
 
@@ -166,7 +167,7 @@ app.layout = dbc.Container(
                             width=2,
                         )
 
-                    ],style={"position": "relative", "left": "0px"}
+                    ], style={"position": "relative", "left": "0px"}
                 ),
                 dbc.Col(
                     [
