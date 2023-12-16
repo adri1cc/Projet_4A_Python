@@ -16,7 +16,7 @@ import logging
 import os
 
 log_file = os.path.join(os.getcwd(), 'app.log')
-
+max_lines = 10
 
 # Configure logging
 logging.basicConfig(filename=log_file, filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -52,6 +52,18 @@ test_mode_switch = html.Div(
     style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
 )
 
+logs_switch = html.Div(
+    [
+        dbc.Row(
+            [
+                dbc.Col(html.Label("Logs"), width="auto"),  # Positionne "Basique" à gauche
+                dbc.Col(dbc.Switch(id="logs-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
+            ],
+            className="align-items-center",  # Centre les éléments verticalement dans la ligne
+        ),
+    ],
+    style={"position": "absolute", "top": "50px", "right": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
+)
 ### LES FIGURES ###
 fig = go.Figure()
 fig_graph = go.Figure()
@@ -73,7 +85,7 @@ pair = dcc.Dropdown(
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='BTC/USDT',id='pair-dropdown',
+                            ],value='BTC/USDT',id='pair-dropdown',style={'color': 'black'}
                     )
 
 strat = dcc.Dropdown(
@@ -81,14 +93,14 @@ strat = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='SimpleSMA',id='strat-dropdown',
+                            ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
 pair_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'BTC/USDT', 'value': 'BTC/USDT'},
                         {'label': 'ETH/USDT', 'value': 'ETH/USDT'},
                         {'label': 'SOL/USDT', 'value': 'SOL/USDT'},
-                            ],value='BTC/USDT',id='pair-backtest-dropdown',
+                            ],value='BTC/USDT',id='pair-backtest-dropdown',style={'color': 'black'}
                     )
 
 strat_backtest = dcc.Dropdown(
@@ -96,11 +108,11 @@ strat_backtest = dcc.Dropdown(
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
-                            ],value='SimpleSMA',id='strat-backtest-dropdown',
+                            ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
 
-selected_message = html.Div(id='selected-message', style={"position": "absolute", "top": "250px", "left": "500px"})
-message_bis = html.Div(id='message-bis', children='En attente', style={"position": "absolute", "top": "300px", "left": "500px"})
+selected_message = html.Div(id='selected-message')
+message_bis = html.Div(id='message-bis', children='En attente')
 percentage_message = html.Div(id= 'percentage-message')
 date = '2022-06-11 00:00:00'
 trading_logic = create_trading_logic()
@@ -113,106 +125,122 @@ app.layout = dbc.Container(
             [
                 dbc.Col(color_mode_switch, width=2),  # Replace with actual content
                 dbc.Col(test_mode_switch, width=2),  # Replace with actual content
+                dbc.Col(logs_switch, width=2),
             ],
         ),
-        dbc.Container( # ANALYSIS PART
-            [
-                dbc.Row(
-                    [
-                        dbc.Col([
-                            html.Div([backtest_button], style={"position": "absolute", "top": "100px", "left": "120px"}, className="d-grid gap-2 d-md-block",)
-
-                            ]),
-
-                        dbc.Col(pair_backtest, style={"position": "absolute", "top": "200px", "left": "100px"}, width=2),
-                        dbc.Col(strat_backtest, style={"position": "absolute", "top": "300px", "left": "100px"}, width=2),
-                        dbc.Col(html.Div([
-                                        html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
-                                        dcc.Input(id='input-date', type='text'),
-                                        html.Div(id='output-date')
-                                    ]), style={"position": "absolute", "top": "400px", "left": "100px"}, width=2),
-                    ]
-                ),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
-                                dcc.Graph(id="graph", figure=fig, className="border"),
-                                dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
-                            ],
-                            width=10,
-                            style={"position": "relative", "left": "225px"},
-                        ),
-                        # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
-
-                    ]
-                ),
-            ],
-            className="mt-4", id="Analyse",  # Adjust margin-top as necessary
-        ),
-        dbc.Container( #PARTIE LIVE
-            [   
-                dbc.Col(
-                            [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none"})
-                            ],
-                            width=10,
-                            style={"position": "relative", "top": "500px", "left": "100px"},
-                        ),
-                dbc.Row(
-                    [
-                        dbc.Col(pair, style={"position": "absolute", "top": "200px", "left": "500px"}, width=2),
-                        dbc.Col(strat, style={"position": "absolute", "top": "200px", "left": "900px"}, width=2),
-                    ]
-                ),
-                dbc.Row(
-                    [
-                        selected_message,
-                        message_bis,
-                    ],
-                ),
-                dbc.Col(
-                    [
-                        percentage_message,
-                        dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
-                    ],
-                    width=10,
-                    style={"position": "absolute", "top": "350px", "left": "500px", 'width': '600px'},
-                ),
-                dbc.Col([html.Div([
+        dbc.Container([
+            dbc.Col([html.Div([
                                     dcc.Interval(
                                         id='interval-component',
-                                        interval=1 * 1000,  # in milliseconds
+                                        interval=0.5 * 1000,  # in milliseconds
                                         n_intervals=0
                                     ),
                                     dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
                                 ])
                 ])
+        ],id = "logs", fluid = True
+        ),
+        dbc.Container( # ANALYSIS PART
+            [
+                dbc.Col(
+                    [
+                        dbc.Row([
+                            html.Div([backtest_button], style={"position": "relative", "top": "100px"}, className="d-grid gap-2 d-md-block",)
+
+                            ]),
+
+                        dbc.Row(dbc.Col(pair_backtest, style={"position": "relative", "top": "200px"}, width=2)),
+                        dbc.Row(dbc.Col(strat_backtest, style={"position": "relative", "top": "250px"}, width=2)),
+                        dbc.Col(
+                            [
+                                html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
+                                dbc.Row(
+                                    [
+                                        dbc.Col(dcc.Input(id='input-date', type='text')),
+                                        dbc.Col(html.Div(id='output-date')),
+                                    ]
+                                )
+                            ],
+                            style={"position": "relative", "top": "300px"},
+                            width=2,
+                        )
+
+                    ],style={"position": "relative", "left": "0px"}
+                ),
+                dbc.Col(
+                    [
+                                dcc.Graph(id="graph", figure=fig, className="border"),
+                                dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
+                            ],
+                            width=10,
+                            style={"position": "relative", "left": "200px", "top": "-100px"},
+                        ),
+                        # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
+            ],
+            className="mt-4", id="Analyse",style={"position": "relative", "left": "00px", "top": "-100px"}  # Adjust margin-top as necessary
+        ),
+        dbc.Container( #PARTIE LIVE
+            [   
+
+                dbc.Row(
+                    [
+                        dbc.Col(pair, style={"position": "relative", "top": "100px", "left": "500px"}, width=2),
+                        dbc.Col(strat, style={"position": "relative", "top": "100px", "left": "600px"}, width=2),
+                    ]
+                ),
+                dbc.Col(
+                    [
+                        dbc.Row(selected_message),
+                        dbc.Row(message_bis),
+                    ],style={"position": "relative", "top": "0px", "left": "500px"}, width=10
+                ),
+                dbc.Col(
+                    [
+                        dbc.Row(percentage_message,style={"position": "relative", "top": "0px", "left": "20px"}),
+                        dcc.Slider(id='slider-wallet',min=5,max=100,step=5,value=5,tooltip={'placement': 'bottom', 'always_visible': True})
+                    ],
+                    width=10,
+                    style={"position": "relative", "top": "0px", "left": "00px", 'width': '400px'},
+                ),
+                dbc.Row(
+                        [
+                            html.Div([trade_button], style={"position": "relative", "top": "15px"},
+                className="d-grid gap-2 d-md-block",),
+                            html.Div([stop_trade_button], style={"position": "relative", "top": "50px"},
+                className="d-grid gap-2 d-md-block",),
+                            html.Div([wallet_button], style={"position": "relative", "top": "100px"},
+                className="d-grid gap-2 d-md-block",),
+                        ]
+                    ),
+                dbc.Col(
+                            [
+                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
+                            ],
+                            width=12,
+                            style={"position": "relative", "top": "200px", "left": "100px"},
+                        ),
+                
             ],id="Live1",
         ),
-        dbc.Container(
-            [
-                html.Div([trade_button], style={"position": "absolute", "top": "250px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-                html.Div([stop_trade_button], style={"position": "absolute", "top": "350px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-                html.Div([wallet_button], style={"position": "absolute", "top": "450px", "left": "250px"},
-    className="d-grid gap-2 d-md-block",),
-            ],id="Live2",
-        ),
-    ]
+
+    ],fluid=True
 )
 # Définir la fonction de callback
 @app.callback(dash.dependencies.Output('log-output', 'value'),
               dash.dependencies.Input('interval-component', 'n_intervals'))
 def update_logs(n):
     global log_file
-    # Read logs from the log file or any other source
-    with open(log_file, 'r') as log_file_handle:
-        logs = log_file_handle.read()
+    max_lines = 7  # Nombre maximal de lignes à afficher
 
-    # Display logs as HTML
-    return logs
+    # Lisez les messages de journal depuis le fichier ou toute autre source
+    with open(log_file, 'r') as log_file_handle:
+        logs = log_file_handle.readlines()
+
+    # Affichez les dernières lignes jusqu'au nombre maximal défini
+    display_logs = logs[-max_lines:]
+
+    # Retournez les messages de journal pour les afficher
+    return ''.join(display_logs)
 
 
 @app.callback(
@@ -305,24 +333,32 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
 
     return fig, fig_graph #,fig2
 
-@callback(
-    Output("Analyse", "style"),
-    Output("Live1", "style"),
-    Output("Live2", "style"),
-    Input("test-mode-switch", "value"),
+@app.callback(
+    [Output("Analyse", "style"),
+     Output("Live1", "style"),
+     Output("logs", "style")],
+    [Input("test-mode-switch", "value"),
+     Input("logs-switch", "value")],
     allow_duplicate=True,
 )
-def hide_graph(switch_value):
+def update_page_logs(switch_value, logs_button):
     """
-    Callback to show or hide sections of the dashboard based on the test mode.
+    Callback to dynamically adjust the layout based on the test mode and logs visibility.
     """
-    if switch_value:
-        # If the switch is on, show the graph and the button
-        return {"display": "block"}, {"display": "none"}, {"display": "none"}
-    else:
-        
-        # If the switch is off, hide the graph and the button
-        return {"display": "none"}, {"display": "block"}, {"display": "block"}
+    logs_style = {"display": "none"}
+    analyse_top = "-100px" if logs_button else "0px"
+    live_top = "0px" if logs_button else "0px"
+    analyse_display = "block" if switch_value else "none"
+    live_display = "block" if not switch_value else "none"
+
+    if logs_button:  # Show logs
+        logs_style = {"position": "relative", "top": "0px", "left": "0px", "width": "100%", "z-index": 1}
+
+    live = {"display": live_display, "position": "relative", "top": live_top}
+    analyse = {"display": analyse_display, "position": "relative", "top": analyse_top}
+
+    return analyse, live, logs_style
+
 
 @callback(
     Output('selected-message', 'children'),
@@ -340,7 +376,7 @@ def update_selected_message(selected_strat, selected_pair):
     Input('pair-dropdown', 'value'),
 )
 def update_percentage_message(selected_pair):
-    return f"Quel pourcentage de la paire {selected_pair} souhaitez-vous utiliser?"
+    return f"Quel risque pour {selected_pair} souhaitez-vous utiliser ?"
 
 clientside_callback(
     """
