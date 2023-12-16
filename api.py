@@ -1,9 +1,10 @@
-import ccxt
-import dontshare_config as dc
-import pandas as pd
 from datetime import datetime
 import os
+
+import ccxt
 import logging
+import dontshare_config as dc
+import pandas as pd
 import plotly.graph_objects as go
 
 # Create an instance of the Mexc client

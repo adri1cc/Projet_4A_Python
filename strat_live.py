@@ -1,6 +1,6 @@
 import api
-import strategies
 import logging
+import strategies
 
 result = None
 

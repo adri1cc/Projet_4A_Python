@@ -1,10 +1,11 @@
-import pandas as pd
+import os
+
 import api
+import logging
+import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import os
 from tqdm import tqdm
-import logging
 
 class BaseStrategy:
     def __init__(self, pair, timeframe):

@@ -2,18 +2,19 @@
 This script contains the code for a trading dashboard using Dash.
 """
 
-from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
+from datetime import datetime
+import os
+
+import api
+import dash
+import logging
 import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
+from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 from dash_bootstrap_templates import load_figure_template
-from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
-import api
-import dash
 from dash.exceptions import PreventUpdate
-from datetime import datetime
-import logging
-import os
+from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 log_file = os.path.join(os.getcwd(), 'app.log')
 max_lines = 10
