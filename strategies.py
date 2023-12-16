@@ -263,7 +263,7 @@ class SimpleSMALive(BaseStrategy):
 
         return 0
 
-class RSIStrategy(BaseStrategy):
+class RSIStrategy(BaseStrategy): #TODO Finish and verify it
     def __init__(self, pair, timeframe, rsi_period, overbought_threshold=70, oversold_threshold=30):
         """
         Initialize RSIStrategy object.

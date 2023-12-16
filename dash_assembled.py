@@ -216,8 +216,8 @@ app.layout = dbc.Container(
                             [
                                 dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
                             ],
-                            width=12,
-                            style={"position": "relative", "top": "200px", "left": "100px"},
+                            width=8,
+                            style={"position": "relative", "top": "0px", "left": "500px"},
                         ),
                 
             ],id="Live1",
