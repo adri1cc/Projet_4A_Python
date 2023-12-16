@@ -2,18 +2,19 @@
 This script contains the code for a trading dashboard using Dash.
 """
 
-from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
+from datetime import datetime
+import os
+
+import api
+import dash
+import logging
 import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
+from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 from dash_bootstrap_templates import load_figure_template
-from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
-import api
-import dash
 from dash.exceptions import PreventUpdate
-from datetime import datetime
-import logging
-import os
+from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 log_file = os.path.join(os.getcwd(), 'app.log')
 max_lines = 10
@@ -287,16 +288,6 @@ def update_output(value):
     except ValueError:
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
-def plotAccountInfo(df_account):
-     table_trace = go.Table(
-     header=dict(values=df_account.columns),
-     cells=dict(values=[df_account[col] for col in df_account.columns])
-     )
-     fig = go.Figure(data =[table_trace])
-     #Previous bar used
-     #fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-     return fig
-
 # Separate callback for color switch
 @app.callback(
     Output("graph-wallet", "style"),
@@ -335,7 +326,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
     if n_clicks_wallet is not None and wallet_style["display"] == "block":
         previous_wallet_button['wallet_buton'] = n_clicks_wallet
         df_account = api.get_info_account()
-        fig_graph = plotAccountInfo(df_account)
+        fig_graph = api.plot_info_account(df_account)
 
     template = "minty" if switch_on else "minty_dark"
     fig.update_layout(template=template)
