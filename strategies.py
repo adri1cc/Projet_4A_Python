@@ -262,3 +262,120 @@ class SimpleSMALive(BaseStrategy):
             return "sell"
 
         return 0
+
+class RSIStrategy(BaseStrategy):
+    def __init__(self, pair, timeframe, rsi_period, overbought_threshold=70, oversold_threshold=30):
+        """
+        Initialize RSIStrategy object.
+
+        :param pair: Trading pair (e.g., 'BTC/USD').
+        :param timeframe: Timeframe for analysis (e.g., '1h').
+        :param rsi_period: RSI period for calculation.
+        :param overbought_threshold: Overbought threshold for RSI (default is 70).
+        :param oversold_threshold: Oversold threshold for RSI (default is 30).
+        """
+        super().__init__(pair, timeframe)
+        self.__rsi_period = rsi_period
+        self.__overbought_threshold = overbought_threshold
+        self.__oversold_threshold = oversold_threshold
+
+    def update_data(self):
+        """
+        Update historical data for RSI calculation.
+        """
+        if self._df is None:
+            self._df = api.get_ohlcv(self._pair, self._timeframe, limit=self.__rsi_period + 1)
+        new_data = api.get_ohlcv(self._pair, self._timeframe, limit=1)
+        self._df = pd.concat([self._df, new_data], ignore_index=True)
+        self._df = self._df.drop_duplicates(subset=['Timestamp'], keep='last')
+
+    def backtest(self, since):
+        """
+        Perform a backtest using the Relative Strength Index (RSI) strategy.
+
+        :param since: Start date for the backtest.
+        """
+        # Utilize inherited methods and attributes
+        logging.info("Calculating backtest ...")
+        if since is None:
+            since = '2023-06-11 00:00:00'
+
+        self.set_live_trade(False)
+        self._portfolio_values = []
+
+        path = self.prepare_backtest_data(since)
+        historical_data = super().load_data(path, since)
+        super().set_data(historical_data.copy())
+
+        initial_portfolio_value = 1000
+        super().set_last_portfolio_value(initial_portfolio_value)
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+
+        close_prices = super().get_data()['Close']
+        timestamps = super().get_data()['Timestamp']
+
+        super().get_data()['RSI'] = self.calculate_rsi(close_prices)
+
+        for i in tqdm(range(self.__rsi_period, len(super().get_data())), desc="Backtesting Progress"):
+            close_price = close_prices.iloc[i]
+            timestamp = timestamps.iloc[i]
+
+            last_rsi = super().get_data()['RSI'].iloc[i - 1]
+            signal = self.generate_signal(last_rsi)
+
+            if signal == "buy" and not self.get_live_trade():
+                self.set_live_trade(True)
+                prix_achat = close_price
+                logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+
+            elif signal == "sell" and self.get_live_trade():
+                self.set_live_trade(False)
+                difference_de_prix = close_price - prix_achat
+                valeur_apres_vente = super().get_last_portfolio_value() + \
+                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                super().set_last_portfolio_value(valeur_apres_vente)
+                self._portfolio_values.append(
+                    (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
+                     round(difference_de_prix, 2)))
+                logging.info(
+                    f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+
+        logging.info("Backtest complete. Performance metrics:")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        return
+
+    # Override or add other methods as needed...
+
+    def calculate_rsi(self, close_prices):
+        """
+        Calculate RSI values and add them to the DataFrame.
+
+        :param close_prices: Series containing closing prices.
+        """
+        daily_returns = close_prices.diff().dropna()
+        gain = daily_returns[daily_returns > 0].mean()
+        loss = -daily_returns[daily_returns < 0].mean()
+
+        rs = gain / loss
+        rsi = 100 - (100 / (1 + rs))
+
+        return pd.concat([pd.Series([None] * (self.__rsi_period - 1)), rsi], ignore_index=True)
+
+    def generate_signal(self, rsi_value):
+        """
+        Generate buy, sell, or hold signal based on RSI values.
+
+        :param rsi_value: Current RSI value.
+        :return: Buy, sell, or hold signal.
+        """
+        if pd.isnull(rsi_value):
+            return 0
+
+        if rsi_value > self.__overbought_threshold:
+            return "sell"
+        elif rsi_value < self.__oversold_threshold:
+            return "buy"
+
+        return 0
