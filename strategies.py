@@ -327,16 +327,14 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
             last_rsi = super().get_data()['RSI'].iloc[i - 1]
 
             #signal = self.generate_signal(last_rsi)
-            signal = "buy" if last_rsi < 30 else "sell" if last_rsi > 70 else 0
+            signal = "buy" if last_rsi < self.__oversold_threshold else "sell" if last_rsi > self.__overbought_threshold else 0
 
             if signal == "buy" and not self.get_live_trade():
-                print("buy")
                 self.set_live_trade(True)
                 prix_achat = close_price
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
 
             elif signal == "sell" and self.get_live_trade():
-                print("sell")
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
                 valeur_apres_vente = super().get_last_portfolio_value() + \
@@ -369,7 +367,7 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
         #close_prices = close_prices['Close'] if isinstance(close_prices, pd.DataFrame) else close_prices
 
         daily_returns = close_prices.diff().dropna()
-        print(daily_returns)
+        #print(daily_returns)
         
         # Calculate gain and loss with positive and negative values
         #gain = daily_returns[daily_returns > 0].rolling(self.__rsi_period).mean()
@@ -378,7 +376,6 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
         #loss = -daily_returns[daily_returns < 0].rolling(self.__rsi_period).mean()
         loss = daily_returns.apply(lambda x: -x if x<0 else 0)
         #print(loss) 
-        #TODO À l'heure actuelle, sur les 8982 valeurs qu'on ait censés avoir, quand l'un affiche une valeur l'autre affiche Nan
 
         # Handling division by zero
         if loss.empty or (loss == 0).all():
