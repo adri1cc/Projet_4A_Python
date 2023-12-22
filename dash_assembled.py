@@ -93,7 +93,7 @@ pair = dcc.Dropdown(
 strat = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
+                        {'label': 'RSI', 'value': 'RSI'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
                             ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
@@ -108,7 +108,7 @@ pair_backtest = dcc.Dropdown(
 strat_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
+                        {'label': 'RSI', 'value': 'RSI'},
                         {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
                             ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
@@ -206,11 +206,11 @@ app.layout = dbc.Container(
                 ),
                 dbc.Row(
                         [
-                            html.Div([trade_button], style={"position": "relative", "top": "15px"},
+                            html.Div([trade_button], style={"position": "relative", "top": "25px"},
                 className="d-grid gap-2 d-md-block",),
-                            html.Div([stop_trade_button], style={"position": "relative", "top": "50px"},
+                            html.Div([stop_trade_button], style={"position": "relative", "top": "75px"},
                 className="d-grid gap-2 d-md-block",),
-                            html.Div([wallet_button], style={"position": "relative", "top": "100px"},
+                            html.Div([wallet_button], style={"position": "relative", "top": "125px"},
                 className="d-grid gap-2 d-md-block",),
                         ]
                     ),
