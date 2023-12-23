@@ -41,7 +41,7 @@ live_analysis_switch = html.Div(
             [
                 dbc.Col(html.Label("Live"), width="auto"),  # Positionne "Basique" à gauche
                 dbc.Col(dbc.Switch(id="live-analysis-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
-                dbc.Col(html.Label("Analyse"), width="auto"),  # Positionne "Avancé" à droite
+                dbc.Col(html.Label("Analysis"), width="auto"),  # Positionne "Avancé" à droite
             ],
             className="align-items-center",  # Centre les éléments verticalement dans la ligne
         ),
@@ -65,11 +65,11 @@ logs_switch = html.Div(
 backtest_figure = go.Figure()
 wallet_figure = go.Figure()
 
-trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
-stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
-wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
+trade_button = dbc.Button("Launch bot", id="trade-button", n_clicks=0, color="primary",size="lg")
+stop_trade_button = dbc.Button("Stop bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
+wallet_button = dbc.Button("Display portfolio", id="wallet-button", n_clicks=0, color="primary",size="lg")
 previous_state = {'trade': 0, 'stop': 0}
-backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
+backtest_button = dbc.Button("See backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
 previous_backtest_button = {'backtest_buton': 0}
 previous_wallet_button = {'wallet_buton': 0}
 
@@ -84,8 +84,8 @@ pair = dcc.Dropdown(
 strat = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
-                        {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
+                        {'label': 'Strategy 2', 'value': 'Strategy 2'},
+                        {'label': 'Strategy 3', 'value': 'Strategy 3'},
                             ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
 pair_backtest = dcc.Dropdown(
@@ -99,13 +99,13 @@ pair_backtest = dcc.Dropdown(
 strat_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Stratégie 2', 'value': 'Stratégie 2'},
-                        {'label': 'Stratégie 3', 'value': 'Stratégie 3'},
+                        {'label': 'Strategy 2', 'value': 'Strategy 2'},
+                        {'label': 'Strategy 3', 'value': 'Strategy 3'},
                             ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
 
 user_choice = html.Div(id='user-choice')
-trading_status = html.Div(id='trading-status', children='En attente')
+trading_status = html.Div(id='trading-status', children='Waiting')
 percentage_message = html.Div(id='percentage-message')
 
 # Default date
@@ -117,7 +117,7 @@ trading_logic = create_trading_logic()
 # Dash layout
 app.layout = dbc.Container(
     [
-        html.Div(["DASHBOARD TRADING"], className="bg-primary text-white h3 p-2",),
+        html.Div(["TRADING DASHBOARD"], className="bg-primary text-white h3 p-2",),
         dbc.Row(
             [
                 dbc.Col(color_mode_switch, width=2),
@@ -154,7 +154,7 @@ app.layout = dbc.Container(
                                         style={"position": "relative", "top": "250px"}, width=2)),
                         dbc.Col(
                             [
-                                html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
+                                html.Label('Enter a date (format : YYYY-MM-DD HH:MM:SS) :'),
                                 dbc.Row(
                                     [
                                         dbc.Col(dcc.Input(id='input-date', type='text')),
@@ -261,7 +261,7 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
         previous_state['trade'] = n_clicks_trade
         trading_logic['stop_flag'] = False
         start_trade(trading_logic, "5m", pair_live, strat_live, percentage)
-        return 'Trade started'# TODO resolve print
+        return 'Trade started'# TODO resolve return
     elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
         previous_state['stop'] = n_clicks_stop
         stop_trade(trading_logic)
@@ -287,9 +287,9 @@ def update_output(value):
         date = str(datetime_obj)
         logging.info(date)
         logging.info(type(date))
-        return 'Vous avez saisi une date valide : {}'.format(datetime_obj.strftime('%Y-%m-%d %H:%M:%S'))
+        return 'Valid format : {}'.format(datetime_obj.strftime('%Y-%m-%d %H:%M:%S'))
     except ValueError:
-        return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
+        return 'Invalid format. Enter a date with this format YYYY-MM-DD HH:MM:SS.'
 
 @callback(
     Output("wallet-figure", "style"),
@@ -373,14 +373,14 @@ def update_user_choice(selected_strat, selected_pair):
     """
     Callback to update the message indicating the selected strategy and pair.
     """
-    return f"Vous avez choisi la stratégie {selected_strat} sur la paire {selected_pair}."
+    return f"You choose strategy {selected_strat} on {selected_pair}."
 
 @callback(
     Output('percentage-message', 'children'),
     Input('pair-dropdown', 'value'),
 )
 def update_percentage_message(selected_pair):
-    return f"Quel risque pour {selected_pair} souhaitez-vous utiliser ?"
+    return f"What percentage of {selected_pair} do you want to use?"
 
 clientside_callback(
     """
