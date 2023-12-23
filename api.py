@@ -1,6 +1,5 @@
 from datetime import datetime
 import os
-
 import ccxt
 import logging
 import dontshare_config as dc
@@ -11,29 +10,33 @@ import plotly.graph_objects as go
 mexc = ccxt.mexc({
     'apiKey': dc.API_KEY_MEXC,  # Public API key
     'secret': dc.API_SECRET_MEXC,  # Private API key
-    'enableRateLimit': True,  # Enable rate limit if necessary
+    'enableRateLimit': True,
 })
 
+# Create an instance of the Mexc FUTURES client
 mexc_futures = ccxt.mexc({
     'apiKey': dc.API_KEY_MEXC,
     'secret': dc.API_SECRET_MEXC,
-    'enableRateLimit': True,  # Enable rate limit if necessary
+    'enableRateLimit': True,
     "options": {'defaultType': 'swap'}  # Set account type to FUTURES
 })
 
-binance_testnet = ccxt.binance({
+# Create an instance of the Binance client
+binance = ccxt.binance({
     'apiKey': dc.API_KEY_BINANCE,
     'secret': dc.API_SECRET_BINANCE,
-    'enableRateLimit': True,  # Enable rate limit if necessary
+    'enableRateLimit': True,
 })
 
-coinbase_testnet = ccxt.coinbase({
+# Create an instance of the Coinbase client
+coinbase = ccxt.coinbase({
     'apiKey': dc.API_KEY_COINBASE,
     'secret': dc.API_SECRET_COINBASE,
-    'enableRateLimit': True,  # Enable rate limit if necessary
+    'enableRateLimit': True,
 })
 
-exchange = mexc  # Choose the exchange on which operations are performed
+# Choose the exchange on which operations are performed
+exchange = mexc
 
 def get_info_account():
     """
@@ -44,7 +47,6 @@ def get_info_account():
     try:
         balance = exchange.fetch_balance()
 
-        # Create a pandas DataFrame to store account information
         account_info = {
             'Currency': [],
             'Total': [],
@@ -60,7 +62,6 @@ def get_info_account():
 
         df_account = pd.DataFrame(account_info)
 
-        # Display the DataFrame
         return df_account
 
     except ccxt.NetworkError as e:
@@ -75,10 +76,8 @@ def plot_info_account(df_account):
      header=dict(values=df_account.columns),
      cells=dict(values=[df_account[col] for col in df_account.columns])
      )
-     fig = go.Figure(data =[table_trace])
-     #Previous bar used
-     #fig = px.bar(df_account, x='Currency', y='Total', title='Account Balance by Currency')
-     return fig
+     figure = go.Figure(data =[table_trace])
+     return figure
 
 def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = None):
     """
@@ -94,7 +93,6 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
     try:
         candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
 
-        # Create a list to store candle data
         candle_data = []
 
         for candle in candles:
@@ -106,7 +104,6 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
         columns = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
         df = pd.DataFrame(candle_data, columns=columns)
         logging.info("Data retrieved")
-        # Display the DataFrame
         return df
 
     except ccxt.NetworkError as e:
@@ -128,19 +125,17 @@ def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profi
     :param investment_value: Amount to invest.
     :param limit_price: Limit price for the order.
     """
-    # Direction: long or short
-
     # Order parameters
     side = 'buy' if direction == 'long' else 'sell'
     # Create the order
     order_params = {
         'symbol': symbol,
         'side': side,
-        'type': 'limit',  # You can adjust the order type according to your needs
+        'type': 'limit',
         'amount': investment_value,
         'stopPrice': stop_loss,
         'takeProfitPrice': take_profit,
-        'price': limit_price,  # Specify the limit price
+        'price': limit_price,
     }
 
     try:
@@ -167,7 +162,6 @@ def get_quantity(pair, side):
     balance = get_info_account()
     logging.info(balance['Currency'])
     quantity = 0
-
     base_currency, quote_currency = pair.split("/")
 
     if side == "sell":
@@ -190,7 +184,7 @@ def get_quantity(pair, side):
 
     return quantity
 
-def get_historical_data(pair, timeframe, since):#TODO add gestion of out of range (missing values)
+def get_historical_data(pair, timeframe, since):# TODO add gestion of out of range (missing values)
     """
     Get historical data for backtesting.
 
@@ -202,24 +196,27 @@ def get_historical_data(pair, timeframe, since):#TODO add gestion of out of rang
     ohlcv_list = []
     ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
     ohlcv_list.append(ohlcv)
+
+    # Download historical values from "since"
     while True:
         logging.info("Downloading...")
         from_ts = ohlcv[-1][0]
         new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
         ohlcv.extend(new_ohlcv)
-        logging.info("1")
+
         if len(new_ohlcv) != 1000:
-            logging.info("out")
             break
+
     df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
     df.set_index('Timestamp', inplace=True)
     df = df.sort_index(ascending=True)
-    # Replace '/' character with '_'
     pair_dir = pair.replace('/', '_')
+
     # Generate output directory based on pair and timeframe
     output_dir = os.path.join(pair_dir + '_data')
     os.makedirs(output_dir, exist_ok=True)
+
     # Generate output filename based on pair, timeframe, and start date
     filename_prefix = f"{pair_dir}_{timeframe}_{since.replace(':', '-').replace(' ', '_')}"
     output_filename = os.path.join(output_dir, f"{filename_prefix}.csv")

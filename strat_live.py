@@ -21,7 +21,6 @@ def backtest(value, timeframe, pair, strategy, date):
     """
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
-        # Add other strategies here
     }
 
     if strategy not in strategies_dict:
@@ -45,7 +44,6 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
-        # Add other strategies here
     }
 
     if strategy not in strategies_dict:
@@ -59,23 +57,22 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
         result = strategy_instance.calculate_signal()
 
         if not strategy_instance.get_live_trade():
+
             if result == "buy":
                 quantity_buy = api.get_quantity(pair, "buy")
                 investment = get_investment(quantity_buy, percentage) 
+                logging.info("Launch buy order")
+                # place_order(pair, "buy", investment, "market")
+                strategy_instance.set_live_trade(True)
 
-                if investment > investment_threshold:
-                    logging.info("Launch buy order")
-                    # place_order(pair, "buy", 6, "market")
-                    strategy_instance.set_live_trade(True)
-                else:
-                    logging.info("Not enough funds")
         elif result == "sell":
             quantity_sell = api.get_quantity(pair, "sell")
 
             if quantity_sell > 0:
                 logging.info("Launch sell order")
-                # place_order(pair, "sell", 6, "market")
+                # place_order(pair, "sell", investment, "market")
                 strategy_instance.set_live_trade(False)
+                
             else:
                 logging.info("Not enough funds")
 
@@ -98,7 +95,8 @@ def get_investment(quantity, percent):
     :param percent: Percentage of the investment.
     :return: Calculated investment amount.
     """
+    MINIMAL_INVESTMENT = 6
     investment = quantity * percent / 100
-    if investment < 6:
-        investment = 6
+    if investment < MINIMAL_INVESTMENT:
+        investment = MINIMAL_INVESTMENT
     return investment

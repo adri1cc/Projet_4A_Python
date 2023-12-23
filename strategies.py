@@ -1,5 +1,4 @@
 import os
-
 import api
 import logging
 import pandas as pd
@@ -38,73 +37,6 @@ class BaseStrategy:
         """
         return self._live_trade
 
-    def prepare_backtest_data(self, since):
-        """
-        Generate the path for saving backtest data.
-
-        :param since: Start date for backtesting.
-        :return: Path to store backtest data.
-        """
-        pair_dir = self._pair.replace('/', '_')
-        output_dir = f"{pair_dir}_data"
-        formatted_since = since.replace(':', '-').replace(' ', '_')
-        filename = f"{pair_dir}_{self._timeframe}_{formatted_since}.csv"
-        path = os.path.join(output_dir, filename)
-        return path
-    
-    def load_data(self, path, since):
-        """
-        Load historical data for backtesting.
-
-        :param path: Path to historical data file.
-        :param since: Start date for loading data.
-        :return: DataFrame containing historical data.
-        """
-        if not os.path.exists(path):
-            logging.info("Need to download data...")
-            historical_data = api.get_historical_data(self._pair, self._timeframe, since)
-            historical_data = pd.read_csv(path)
-        else:
-            logging.info("Using existing data...")
-            historical_data = pd.read_csv(path)
-        return historical_data
-    
-    def plot_figure(self):
-        """
-        Plot a figure showing candlestick chart, portfolio values, and portfolio changes.
-
-        :return: Plotly figure object.
-        """
-        sell, prix, portfolio_values, changes = zip(*self._portfolio_values)
-        dates = self._df.index
-
-        fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
-        # fig.add_trace(go.Candlestick(x=dates,
-        #                  open=self._df['Open'],
-        #                  high=self._df['High'],
-        #                  low=self._df['Low'],
-        #                  close=self._df['Close'],
-        #                  name=f'{self._pair} Candlestick'),
-        #   row=1, col=1)
-        fig.add_trace(go.Scatter(x=dates, y=self._df['Close'], mode='lines', name=f"Values of {self._pair}"), row=1, col=1)
-        fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
-        fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
-        title = 'Backtest ' + self._pair
-        fig.update_layout(title_text=title, showlegend=True)
-        fig.update_layout(xaxis_rangeslider_visible=False)
-        return fig
-
-    def is_data_empty(self):
-        """
-        Check if historical data is empty.
-
-        :return: True if data is empty, False otherwise.
-        """
-        if self._df is None or len(self._df) == 0:
-            logging.warning("DataFrame is empty or None.")
-            return True
-        return False
-
     def set_data(self, data):
         """
         Set historical data for the strategy.
@@ -136,6 +68,66 @@ class BaseStrategy:
         :return: The last portfolio value.
         """
         return self._last_portfolio_value
+    
+    def prepare_backtest_data(self, since):
+        """
+        Generate the path for saving backtest data.
+
+        :param since: Start date for backtesting.
+        :return: Path to store backtest data.
+        """
+        pair_dir = self._pair.replace('/', '_')
+        output_dir = f"{pair_dir}_data"
+        formatted_since = since.replace(':', '-').replace(' ', '_')
+        filename = f"{pair_dir}_{self._timeframe}_{formatted_since}.csv"
+        path = os.path.join(output_dir, filename)
+        return path
+    
+    def is_data_empty(self):
+        """
+        Check if historical data is empty.
+
+        :return: True if data is empty, False otherwise.
+        """
+        if self._df is None or len(self._df) == 0:
+            logging.warning("DataFrame is empty or None.")
+            return True
+        return False
+    
+    def load_data(self, path, since):
+        """
+        Load historical data for backtesting.
+
+        :param path: Path to historical data file.
+        :param since: Start date for loading data.
+        :return: DataFrame containing historical data.
+        """
+        if not os.path.exists(path):
+            logging.info("Need to download data...")
+            historical_data = api.get_historical_data(self._pair, self._timeframe, since)
+            historical_data = pd.read_csv(path)
+        else:
+            logging.info("Using existing data...")
+            historical_data = pd.read_csv(path)
+        return historical_data
+    
+    def plot_figure(self):
+        """
+        Plot a figure showing candlestick chart, portfolio values, and portfolio changes.
+
+        :return: Plotly figure object.
+        """
+        sell, prix, portfolio_values, changes = zip(*self._portfolio_values)
+        dates = self._df.index
+
+        fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+        fig.add_trace(go.Scatter(x=dates, y=self._df['Close'], mode='lines', name=f"Values of {self._pair}"), row=1, col=1)
+        fig.add_trace(go.Scatter(x=sell, y=portfolio_values, mode='lines', name='Portfolio Values'), row=2, col=1)
+        fig.add_trace(go.Bar(x=sell, y=changes, name='Portfolio Changes'), row=3, col=1)
+        title = 'Backtest ' + self._pair
+        fig.update_layout(title_text=title, showlegend=True)
+        fig.update_layout(xaxis_rangeslider_visible=False)
+        return fig
 
     def __del__(self):
         """

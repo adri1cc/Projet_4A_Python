@@ -4,7 +4,6 @@ This script contains the code for a trading dashboard using Dash.
 
 from datetime import datetime
 import os
-
 import api
 import dash
 import logging
@@ -16,16 +15,13 @@ from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
+# Log file creation
 log_file = os.path.join(os.getcwd(), 'app.log')
-max_lines = 10
 
 # Configure logging
 logging.basicConfig(filename=log_file, filemode='w', format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 # Load templates for Plotly figures
 load_figure_template(["minty", "minty_dark"])
-
-# Sample data for the dashboard
-df = px.data.gapminder()
 
 # Initialize the Dash app
 app = Dash(__name__, external_stylesheets=[dbc.themes.MINTY, dbc.icons.FONT_AWESOME])
@@ -39,7 +35,7 @@ color_mode_switch = html.Span(
     ]
 )
 
-test_mode_switch = html.Div(
+live_analysis_switch = html.Div(
     [
         dbc.Row(
             [
@@ -65,12 +61,10 @@ logs_switch = html.Div(
     ],
     style={"position": "absolute", "top": "50px", "right": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
 )
-### LES FIGURES ###
-fig = go.Figure()
-fig_graph = go.Figure()
 
+backtest_figure = go.Figure()
+wallet_figure = go.Figure()
 
-### LES BOUTONS ###
 trade_button = dbc.Button("Lancer le bot", id="trade-button", n_clicks=0, color="primary",size="lg")
 stop_trade_button = dbc.Button("Stopper le bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
 wallet_button = dbc.Button("Afficher portefeuille", id="wallet-button", n_clicks=0, color="primary",size="lg")
@@ -78,8 +72,6 @@ previous_state = {'trade': 0, 'stop': 0}
 backtest_button = dbc.Button("Voir le backtest", id="backtest-button", n_clicks=0, color="primary",size="lg")
 previous_backtest_button = {'backtest_buton': 0}
 previous_wallet_button = {'wallet_buton': 0}
-
-### LES LISTES DEROULANTES ###
 
 pair = dcc.Dropdown(
                     options=[
@@ -112,28 +104,31 @@ strat_backtest = dcc.Dropdown(
                             ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
 
-selected_message = html.Div(id='selected-message')
-message_bis = html.Div(id='message-bis', children='En attente')#TODO crtl F explicit name
-percentage_message = html.Div(id= 'percentage-message')
+user_choice = html.Div(id='user-choice')
+trading_status = html.Div(id='trading-status', children='En attente')
+percentage_message = html.Div(id='percentage-message')
+
+# Default date
 date = '2022-06-11 00:00:00'
+
+# Initialization of trading logic : no live trade
 trading_logic = create_trading_logic()
 
-# Utilisez dbc.Row et dbc.Col pour organiser les éléments
+# Dash layout
 app.layout = dbc.Container(
     [
         html.Div(["DASHBOARD TRADING"], className="bg-primary text-white h3 p-2",),
         dbc.Row(
             [
-                dbc.Col(color_mode_switch, width=2),  # Replace with actual content
-                dbc.Col(test_mode_switch, width=2),  # Replace with actual content
+                dbc.Col(color_mode_switch, width=2),
+                dbc.Col(live_analysis_switch, width=2),
                 dbc.Col(logs_switch, width=2),
             ],
         ),
         dbc.Container([
-            dbc.Col([html.Div([
-                                    dcc.Interval(
+            dbc.Col([html.Div([dcc.Interval(
                                         id='interval-component',
-                                        interval=0.5 * 1000,  # in milliseconds
+                                        interval=0.5*1000,  # in milliseconds
                                         n_intervals=0
                                     ),
                                     dcc.Textarea(id='log-output', style={"width": "100%", "height": "200px"}),
@@ -141,17 +136,22 @@ app.layout = dbc.Container(
                 ])
         ],id = "logs", fluid = True
         ),
-        dbc.Container( # ANALYSIS PART
+        # Analysis part
+        dbc.Container(
             [
                 dbc.Col(
                     [
                         dbc.Row([
-                            html.Div([backtest_button], style={"position": "relative", "top": "100px"}, className="d-grid gap-2 d-md-block",)
+                            html.Div([backtest_button], 
+                                     style={"position": "relative", "top": "100px"}, 
+                                     className="d-grid gap-2 d-md-block",)
 
                             ]),
 
-                        dbc.Row(dbc.Col(pair_backtest, style={"position": "relative", "top": "200px"}, width=2)),
-                        dbc.Row(dbc.Col(strat_backtest, style={"position": "relative", "top": "250px"}, width=2)),
+                        dbc.Row(dbc.Col(pair_backtest, 
+                                        style={"position": "relative", "top": "200px"}, width=2)),
+                        dbc.Row(dbc.Col(strat_backtest, 
+                                        style={"position": "relative", "top": "250px"}, width=2)),
                         dbc.Col(
                             [
                                 html.Label('Entrez une date (format : YYYY-MM-DD HH:MM:SS) :'),
@@ -170,19 +170,19 @@ app.layout = dbc.Container(
                 ),
                 dbc.Col(
                     [
-                                dcc.Graph(id="graph", figure=fig, className="border"),
-                                dcc.Slider(id='slider', min=2, max=50, step=1, value=25, tooltip={'placement': 'bottom', 'always_visible': True})
+                                dcc.Graph(id="backtest-figure", figure=backtest_figure, className="border"),
+                                dcc.Slider(id='slider', min=2, max=50, step=1, value=25, 
+                                           tooltip={'placement': 'bottom', 'always_visible': True})
                             ],
                             width=10,
                             style={"position": "relative", "left": "200px", "top": "-100px"},
                         ),
-                        # dbc.Col(dcc.Graph(id="graph2", figure=fig2, className="border"), width=7, style={"position": "relative", "left": "500px"}),
             ],
-            className="mt-4", id="Analyse",style={"position": "relative", "left": "00px", "top": "-100px"}  # Adjust margin-top as necessary
+            className="mt-4", id="analysis",style={"position": "relative", "left": "00px", "top": "-100px"}
         ),
-        dbc.Container( #PARTIE LIVE
+        # Live part
+        dbc.Container(
             [   
-
                 dbc.Row(
                     [
                         dbc.Col(pair, style={"position": "relative", "top": "100px", "left": "500px"}, width=2),
@@ -191,8 +191,8 @@ app.layout = dbc.Container(
                 ),
                 dbc.Col(
                     [
-                        dbc.Row(selected_message),
-                        dbc.Row(message_bis),
+                        dbc.Row(user_choice),
+                        dbc.Row(trading_status),
                     ],style={"position": "relative", "top": "0px", "left": "500px"}, width=10
                 ),
                 dbc.Col(
@@ -215,43 +215,43 @@ app.layout = dbc.Container(
                     ),
                 dbc.Col(
                             [
-                                dcc.Graph(id="graph-wallet", figure=fig_graph, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
+                                dcc.Graph(id="wallet-figure", figure=wallet_figure, className="border", style= {"display": "none", "position": "relative", "top": "90px", "left": "100px"})
                             ],
                             width=12,
                             style={"position": "relative", "top": "200px", "left": "100px"},
-                        ),#TODO change position and size
-                
-            ],id="Live1",
+                        ),# TODO change position and size
+            ],id="live",
         ),
 
     ],fluid=True
 )
-# Définir la fonction de callback
-@app.callback(dash.dependencies.Output('log-output', 'value'),
-              dash.dependencies.Input('interval-component', 'n_intervals'))
-def update_logs(n):
-    global log_file
-    max_lines = 7  # Nombre maximal de lignes à afficher
 
-    # Lisez les messages de journal depuis le fichier ou toute autre source
+# Callbacks
+@callback(
+    Output('log-output', 'value'),
+    Input('interval-component', 'n_intervals'))
+def update_logs(n):
+    """
+    Callback to add or remove the logs window
+    """
+    global log_file
+    # Max lines in the window
+    max_lines = 7
+
     with open(log_file, 'r') as log_file_handle:
         logs = log_file_handle.readlines()
 
-    # Affichez les dernières lignes jusqu'au nombre maximal défini
     display_logs = logs[-max_lines:]
-
-    # Retournez les messages de journal pour les afficher
     return ''.join(display_logs)
 
-
-@app.callback(
-    Output('message-bis', 'children'),
+@callback(
+    Output('trading-status', 'children'),
     [Input('trade-button', 'n_clicks'),
      Input('stop-trade-button', 'n_clicks'),
      Input('strat-dropdown', 'value'),
      Input('pair-dropdown', 'value'),
      Input('slider-wallet','value'),],
-    [State('message-bis', 'children')]
+    [State('trading-status', 'children')]
 )
 def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, previous_message):
     """
@@ -267,19 +267,22 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
         stop_trade(trading_logic)
         return 'Trade stopped'
     else:
-        # No button clicks
         return previous_message
-@app.callback(
-    dash.dependencies.Output('output-date', 'children'),
-    [dash.dependencies.Input('input-date', 'value')]
+    
+@callback(
+    Output('output-date', 'children'),
+    Input('input-date', 'value')
 )
 def update_output(value):
+    """
+    Callback to handle date.
+    """
     global date
+
     if not value:
-        raise PreventUpdate  # Ne rien faire si la valeur est vide
+        raise PreventUpdate
 
     try:
-        # Tentez de convertir la valeur en objet datetime
         datetime_obj = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         date = str(datetime_obj)
         logging.info(date)
@@ -288,26 +291,28 @@ def update_output(value):
     except ValueError:
         return 'Format de date invalide. Entrez une date au format YYYY-MM-DD HH:MM:SS.'
 
-# Separate callback for color switch
-@app.callback(
-    Output("graph-wallet", "style"),
+@callback(
+    Output("wallet-figure", "style"),
     Input('wallet-button', 'n_clicks'),
     prevent_initial_call=True
 )
 def toggle_graph_visibility(n_clicks):
+    """
+    Callback to update the state of the wallet figure.
+    """
     style = {"display": "block" if n_clicks % 2 == 1 else "none"}
     return style
 
-@callback( #Output("graph2", "figure")
-    [Output("graph", "figure"),
-     Output("graph-wallet", "figure")],
+@callback(
+    [Output("backtest-figure", "figure"),
+     Output("wallet-figure", "figure")],
     [Input("color-mode-switch", "value"),
      Input('strat-backtest-dropdown', 'value'),
      Input('pair-backtest-dropdown', 'value'),
      Input("backtest-button", "n_clicks"),
      Input('slider', 'value'),
      Input('wallet-button', 'n_clicks'),
-     Input("graph-wallet", "style")],
+     Input("wallet-figure", "style")],
     allow_duplicate=True
 )
 def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, slider_value, n_clicks_wallet, wallet_style):
@@ -315,28 +320,27 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
     Callback to update figures based on selected parameters.
     """
     global date
-    global fig # Use global to update these global variables
-    global fig_graph
+    global backtest_figure
+    global wallet_figure
+
     if n_clicks_backtest is not None and n_clicks_backtest > previous_backtest_button['backtest_buton']:
         previous_backtest_button['backtest_buton'] = n_clicks_backtest
-        # Make sure your run_strategy function returns a Plotly figure
-        # fig = run_SimpleSMA(slider_value, selected_pair)
-        fig = backtest(slider_value, "5m", selected_pair,selected_strat,date)
-    # Update the theme template for Plotly Express
+        backtest_figure = backtest(slider_value, "5m", selected_pair,selected_strat,date)
+        
     if n_clicks_wallet is not None and wallet_style["display"] == "block":
         previous_wallet_button['wallet_buton'] = n_clicks_wallet
         df_account = api.get_info_account()
-        fig_graph = api.plot_info_account(df_account)
+        wallet_figure = api.plot_info_account(df_account)
 
     template = "minty" if switch_on else "minty_dark"
-    fig.update_layout(template=template)
-    fig_graph.update_layout(template=template)
+    backtest_figure.update_layout(template=template)
+    wallet_figure.update_layout(template=template)
 
-    return fig, fig_graph #,fig2
+    return backtest_figure, wallet_figure
 
-@app.callback(
-    [Output("Analyse", "style"),
-     Output("Live1", "style"),
+@callback(
+    [Output("analysis", "style"),
+     Output("live", "style"),
      Output("logs", "style")],
     [Input("test-mode-switch", "value"),
      Input("logs-switch", "value")],
@@ -347,26 +351,25 @@ def update_page_logs(switch_value, logs_button):
     Callback to dynamically adjust the layout based on the test mode and logs visibility.
     """
     logs_style = {"display": "none"}
-    analyse_top = "-100px" if logs_button else "0px"
+    analysis_top = "-100px" if logs_button else "0px"
     live_top = "0px" if logs_button else "0px"
-    analyse_display = "block" if switch_value else "none"
+    analysis_display = "block" if switch_value else "none"
     live_display = "block" if not switch_value else "none"
 
-    if logs_button:  # Show logs
+    if logs_button:
         logs_style = {"position": "relative", "top": "0px", "left": "0px", "width": "100%", "z-index": 1}
 
     live = {"display": live_display, "position": "relative", "top": live_top}
-    analyse = {"display": analyse_display, "position": "relative", "top": analyse_top}
+    analysis = {"display": analysis_display, "position": "relative", "top": analysis_top}
 
-    return analyse, live, logs_style
-
+    return analysis, live, logs_style
 
 @callback(
-    Output('selected-message', 'children'),
+    Output('user-choice', 'children'),
     Input('strat-dropdown', 'value'),
     Input('pair-dropdown', 'value'), 
 )
-def update_selected_message(selected_strat, selected_pair):
+def update_user_choice(selected_strat, selected_pair):
     """
     Callback to update the message indicating the selected strategy and pair.
     """
