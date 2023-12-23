@@ -16,7 +16,7 @@ from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
 
 import api
-from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
+from strategy_gestion import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 # Log file creation
 log_file = os.path.join(os.getcwd(), 'app.log')
