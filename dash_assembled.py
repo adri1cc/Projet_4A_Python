@@ -9,10 +9,13 @@ import dash
 import logging
 import plotly.express as px
 import plotly.graph_objects as go
+import dash
 import dash_bootstrap_components as dbc
 from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
+
+import api
 from strat_live import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 # Log file creation
@@ -166,7 +169,7 @@ app.layout = dbc.Container(
                             width=2,
                         )
 
-                    ],style={"position": "relative", "left": "0px"}
+                    ], style={"position": "relative", "left": "0px"}
                 ),
                 dbc.Col(
                     [
@@ -205,11 +208,11 @@ app.layout = dbc.Container(
                 ),
                 dbc.Row(
                         [
-                            html.Div([trade_button], style={"position": "relative", "top": "15px"},
+                            html.Div([trade_button], style={"position": "relative", "top": "25px"},
                 className="d-grid gap-2 d-md-block",),
-                            html.Div([stop_trade_button], style={"position": "relative", "top": "50px"},
+                            html.Div([stop_trade_button], style={"position": "relative", "top": "75px"},
                 className="d-grid gap-2 d-md-block",),
-                            html.Div([wallet_button], style={"position": "relative", "top": "100px"},
+                            html.Div([wallet_button], style={"position": "relative", "top": "125px"},
                 className="d-grid gap-2 d-md-block",),
                         ]
                     ),

@@ -2,9 +2,10 @@ from datetime import datetime
 import os
 import ccxt
 import logging
-import dontshare_config as dc
 import pandas as pd
 import plotly.graph_objects as go
+
+import dontshare_config as dc
 
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({

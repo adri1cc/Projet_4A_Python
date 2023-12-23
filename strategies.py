@@ -6,6 +6,8 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
 
+import api
+
 class BaseStrategy:
     def __init__(self, pair, timeframe):
         """
@@ -191,6 +193,7 @@ class SimpleSMALive(BaseStrategy):
             timestamp = timestamps.iloc[i]
 
             last_sma = super().get_data()['SMA'].iloc[i - 1]
+            print(last_sma)
             signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
             if signal == "buy" and not self.get_live_trade():
@@ -256,8 +259,8 @@ class SimpleSMALive(BaseStrategy):
 
         return 0
 
-class RSIStrategy(BaseStrategy): #TODO Finish and verify it
-    def __init__(self, pair, timeframe, rsi_period, overbought_threshold=70, oversold_threshold=30):
+class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour portfolio_values: not enough values to unpack (expected 4, got 0)"
+    def __init__(self, pair, timeframe, rsi_period):
         """
         Initialize RSIStrategy object.
 
@@ -269,8 +272,8 @@ class RSIStrategy(BaseStrategy): #TODO Finish and verify it
         """
         super().__init__(pair, timeframe)
         self.__rsi_period = rsi_period
-        self.__overbought_threshold = overbought_threshold
-        self.__oversold_threshold = oversold_threshold
+        self.__overbought_threshold = 70
+        self.__oversold_threshold = 30
 
     def update_data(self):
         """
@@ -306,6 +309,7 @@ class RSIStrategy(BaseStrategy): #TODO Finish and verify it
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
+        #print(close_prices)
 
         super().get_data()['RSI'] = self.calculate_rsi(close_prices)
 
@@ -314,7 +318,9 @@ class RSIStrategy(BaseStrategy): #TODO Finish and verify it
             timestamp = timestamps.iloc[i]
 
             last_rsi = super().get_data()['RSI'].iloc[i - 1]
-            signal = self.generate_signal(last_rsi)
+
+            #signal = self.generate_signal(last_rsi)
+            signal = "buy" if last_rsi < self.__oversold_threshold else "sell" if last_rsi > self.__overbought_threshold else 0
 
             if signal == "buy" and not self.get_live_trade():
                 self.set_live_trade(True)
@@ -325,13 +331,16 @@ class RSIStrategy(BaseStrategy): #TODO Finish and verify it
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
                 valeur_apres_vente = super().get_last_portfolio_value() + \
-                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                                    super().get_last_portfolio_value() * difference_de_prix / prix_achat
                 super().set_last_portfolio_value(valeur_apres_vente)
                 self._portfolio_values.append(
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
-                     round(difference_de_prix, 2)))
+                    round(difference_de_prix, 2)))
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+
+            elif signal == "0":
+                print("0")
 
         logging.info("Backtest complete. Performance metrics:")
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
@@ -347,28 +356,56 @@ class RSIStrategy(BaseStrategy): #TODO Finish and verify it
 
         :param close_prices: Series containing closing prices.
         """
+        # Extract the 'Close' column if close_prices is a DataFrame
+        #close_prices = close_prices['Close'] if isinstance(close_prices, pd.DataFrame) else close_prices
+
         daily_returns = close_prices.diff().dropna()
-        gain = daily_returns[daily_returns > 0].mean()
-        loss = -daily_returns[daily_returns < 0].mean()
+        #print(daily_returns)
+        
+        # Calculate gain and loss with positive and negative values
+        #gain = daily_returns[daily_returns > 0].rolling(self.__rsi_period).mean()
+        gain = daily_returns.apply(lambda x: x if x>0 else 0)
+        #print(gain) 
+        #loss = -daily_returns[daily_returns < 0].rolling(self.__rsi_period).mean()
+        loss = daily_returns.apply(lambda x: -x if x<0 else 0)
+        #print(loss) 
+
+        # Handling division by zero
+        if loss.empty or (loss == 0).all():
+            return pd.Series([100.0] * len(close_prices), index=close_prices.index)
 
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
+        #print(rsi)
 
-        return pd.concat([pd.Series([None] * (self.__rsi_period - 1)), rsi], ignore_index=True)
+        # Create a new Series with None values and the appropriate index
+        none_values = pd.Series([None] * (self.__rsi_period - 1), index=range(self.__rsi_period - 1))
 
-    def generate_signal(self, rsi_value):
+        # Concatenate the None values and the calculated RSI values
+        if isinstance(rsi, pd.Series):
+            return pd.concat([none_values, rsi], ignore_index=True)
+        else:
+            # If rsi is a scalar, create a Series with the same index and fill it with the scalar value
+            return pd.Series([rsi] * len(close_prices), index=close_prices.index)
+
+
+    def generate_signal(self):
         """
         Generate buy, sell, or hold signal based on RSI values.
 
-        :param rsi_value: Current RSI value.
         :return: Buy, sell, or hold signal.
         """
-        if pd.isnull(rsi_value):
+        if super().is_data_empty():
             return 0
 
-        if rsi_value > self.__overbought_threshold:
-            return "sell"
-        elif rsi_value < self.__oversold_threshold:
-            return "buy"
+        last_rsi = super().get_data()['RSI'].iloc[-1]
+
+        if pd.isnull(last_rsi):
+            return 0
+
+        if last_rsi > self.__overbought_threshold:
+            return "sell"  # sell here
+        elif last_rsi < self.__oversold_threshold:
+            return "buy"  # buy
 
         return 0
