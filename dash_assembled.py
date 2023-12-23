@@ -40,7 +40,7 @@ live_analysis_switch = html.Div(
         dbc.Row(
             [
                 dbc.Col(html.Label("Live"), width="auto"),  # Positionne "Basique" à gauche
-                dbc.Col(dbc.Switch(id="test-mode-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
+                dbc.Col(dbc.Switch(id="live-analysis-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
                 dbc.Col(html.Label("Analyse"), width="auto"),  # Positionne "Avancé" à droite
             ],
             className="align-items-center",  # Centre les éléments verticalement dans la ligne
@@ -342,7 +342,7 @@ def update_figures(switch_on, selected_strat, selected_pair, n_clicks_backtest, 
     [Output("analysis", "style"),
      Output("live", "style"),
      Output("logs", "style")],
-    [Input("test-mode-switch", "value"),
+    [Input("live-analysis-switch", "value"),
      Input("logs-switch", "value")],
     allow_duplicate=True,
 )
