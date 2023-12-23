@@ -42,33 +42,33 @@ live_analysis_switch = html.Div(
     [
         dbc.Row(
             [
-                dbc.Col(html.Label("Live"), width="auto"),  # Positionne "Basique" à gauche
+                dbc.Col(html.Label("Live"), width="auto"),
                 dbc.Col(dbc.Switch(id="live-analysis-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
-                dbc.Col(html.Label("Analysis"), width="auto"),  # Positionne "Avancé" à droite
+                dbc.Col(html.Label("Analysis"), width="auto"),
             ],
-            className="align-items-center",  # Centre les éléments verticalement dans la ligne
+            className="align-items-center",
         ),
     ],
-    style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
+    style={"position": "absolute", "top": "50px", "left": "200px", "fontSize": "22px"}
 )
 
 logs_switch = html.Div(
     [
         dbc.Row(
             [
-                dbc.Col(html.Label("Logs"), width="auto"),  # Positionne "Basique" à gauche
+                dbc.Col(html.Label("Logs"), width="auto"),
                 dbc.Col(dbc.Switch(id="logs-switch", value=False, className="d-inline-block ms-1", persistence=True), width="auto"),
             ],
-            className="align-items-center",  # Centre les éléments verticalement dans la ligne
+            className="align-items-center",
         ),
     ],
-    style={"position": "absolute", "top": "50px", "right": "200px", "fontSize": "22px"}  # Ajoutez cette ligne pour définir la taille du texte du bouton
+    style={"position": "absolute", "top": "50px", "right": "200px", "fontSize": "22px"}
 )
 
 backtest_figure = go.Figure()
 wallet_figure = go.Figure()
 
-trade_button = dbc.Button("Launch bot", id="trade-button", n_clicks=0, color="primary",size="lg")
+trade_button = dbc.Button("Start bot", id="trade-button", n_clicks=0, color="primary",size="lg")
 stop_trade_button = dbc.Button("Stop bot", id="stop-trade-button", n_clicks=0, color="secondary",size="lg")
 wallet_button = dbc.Button("Display portfolio", id="wallet-button", n_clicks=0, color="primary",size="lg")
 previous_state = {'trade': 0, 'stop': 0}
