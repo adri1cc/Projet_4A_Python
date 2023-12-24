@@ -1,3 +1,6 @@
+"""
+This script contains the code for the API communication.
+"""
 from datetime import datetime
 import os
 import ccxt

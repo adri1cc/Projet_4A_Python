@@ -1,5 +1,7 @@
+"""
+This script contains the code for the strategy gestion.
+"""
 import logging
-
 import api
 import strategies
 

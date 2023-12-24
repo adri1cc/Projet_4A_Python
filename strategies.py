@@ -1,3 +1,6 @@
+"""
+This script contains the code of the differents strategies.
+"""
 import os
 import api
 import logging
