@@ -5,7 +5,6 @@ This script contains the code for a trading dashboard using Dash.
 from datetime import datetime
 import os
 import api
-import dash
 import logging
 import plotly.express as px
 import plotly.graph_objects as go
@@ -15,7 +14,6 @@ from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, 
 from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
 
-import api
 from strategy_gestion import start_trade, create_trading_logic, backtest, stop_trade, get_investment
 
 # Log file creation
