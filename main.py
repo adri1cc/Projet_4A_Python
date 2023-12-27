@@ -6,9 +6,7 @@ from datetime import datetime
 import os
 import api
 import logging
-import plotly.express as px
 import plotly.graph_objects as go
-import dash
 import dash_bootstrap_components as dbc
 from dash import Dash, html, dcc, Input, Output, clientside_callback, callback, State
 from dash_bootstrap_templates import load_figure_template
