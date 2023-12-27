@@ -1,0 +1,8 @@
+API_KEY_MEXC = 'xxx'
+API_SECRET_MEXC = 'xxx'
+
+API_KEY_BINANCE = 'xxx'
+API_SECRET_BINANCE ='xxx'
+
+API_KEY_COINBASE = 'xxx'
+API_SECRET_COINBASE = 'xxx'
