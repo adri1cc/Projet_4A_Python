@@ -42,4 +42,4 @@ For inquiries regarding use, sharing, or modification of the code, please contac
 
 # Authors
 Paulin Valayé
-Adrien Jacquet cretides
+Adrien Jacquet Cretides
