@@ -10,6 +10,13 @@ result = None
 def create_trading_logic():
     """
     Create a dictionary to hold trading logic parameters.
+    
+    Example:
+    >>> trading_logic = create_trading_logic()
+    >>> isinstance(trading_logic, dict)
+    True
+    >>> trading_logic['stop_flag']
+    False
     """
     return {'stop_flag': False}
 
@@ -21,6 +28,11 @@ def backtest(value, timeframe, pair, strategy, date):
     :param timeframe: Timeframe for backtesting.
     :param pair: Trading pair for backtesting.
     :return: Figure object for plotting.
+
+    Example:
+    >>> fig = backtest(10, '1h', 'BTC/USDT', 'SimpleSMA', '2022-01-01')
+    >>> isinstance(fig, strategies.SimpleSMALive)
+    True
     """
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
@@ -42,6 +54,10 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     :param timeframe: Timeframe for live trading.
     :param pair: Trading pair for live trading.
     :param strategy: Trading strategy to use (e.g., 'SimpleSMA').
+    
+    Example:
+    >>> trading_logic = create_trading_logic()
+    >>> start_trade(trading_logic, '1h', 'BTC/USDT', 'SimpleSMA', 5)
     """
     investment_threshold = 6
     
@@ -87,6 +103,12 @@ def stop_trade(trading_logic):
     Stop live trading by setting the stop flag.
     
     :param trading_logic: Dictionary holding trading logic parameters.
+    
+    Example:
+    >>> trading_logic = create_trading_logic()
+    >>> stop_trade(trading_logic)
+    >>> trading_logic['stop_flag']
+    True
     """
     trading_logic['stop_flag'] = True
 
@@ -97,6 +119,13 @@ def get_investment(quantity, percent):
     :param quantity: Quantity of the asset.
     :param percent: Percentage of the investment.
     :return: Calculated investment amount.
+    
+    Example:
+    >>> get_investment(100, 10)
+    10.0
+    >>> get_investment(50, 5)
+    2.5
+
     """
     MINIMAL_INVESTMENT = 6
     investment = quantity * percent / 100

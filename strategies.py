@@ -18,6 +18,13 @@ class BaseStrategy:
 
         :param pair: Trading pair (e.g., 'BTC/USD').
         :param timeframe: Timeframe for analysis (e.g., '1h').
+        
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy._pair
+        'BTC/USD'
+        >>> strategy._timeframe
+        '1h'
         """
         self._pair = pair
         self._timeframe = timeframe
@@ -31,6 +38,12 @@ class BaseStrategy:
         Set the live trade status.
 
         :param side: Boolean indicating the live trade status.
+        
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.set_live_trade(True)
+        >>> strategy._live_trade
+        True
         """
         self._live_trade = side
 
@@ -39,6 +52,11 @@ class BaseStrategy:
         Get the live trade status.
 
         :return: Boolean indicating the live trade status.
+        
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.get_live_trade()
+        False
         """
         return self._live_trade
 
@@ -47,6 +65,12 @@ class BaseStrategy:
         Set historical data for the strategy.
 
         :param data: DataFrame containing historical data.
+        
+        Example:
+        >>> import pandas as pd
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> df = pd.DataFrame()
+        >>> strategy.set_data(df)
         """
         self._df = data
 
@@ -63,6 +87,12 @@ class BaseStrategy:
         Set the last portfolio value.
 
         :param value: The last portfolio value.
+
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.set_last_portfolio_value(1200)
+        >>> strategy._last_portfolio_value
+        1200
         """
         self._last_portfolio_value = value
 
@@ -71,6 +101,11 @@ class BaseStrategy:
         Get the last portfolio value.
 
         :return: The last portfolio value.
+
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.get_last_portfolio_value()
+        1000
         """
         return self._last_portfolio_value
     
@@ -80,6 +115,11 @@ class BaseStrategy:
 
         :param since: Start date for backtesting.
         :return: Path to store backtest data.
+
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.prepare_backtest_data('2022-01-01')
+        'BTC_USD_data/BTC_USD_1h_2022-01-01.csv'
         """
         pair_dir = self._pair.replace('/', '_')
         output_dir = f"{pair_dir}_data"
@@ -93,6 +133,11 @@ class BaseStrategy:
         Check if historical data is empty.
 
         :return: True if data is empty, False otherwise.
+        
+        Example:
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> strategy.is_data_empty()
+        True
         """
         if self._df is None or len(self._df) == 0:
             logging.warning("DataFrame is empty or None.")
@@ -106,6 +151,15 @@ class BaseStrategy:
         :param path: Path to historical data file.
         :param since: Start date for loading data.
         :return: DataFrame containing historical data.
+
+        Example:
+        >>> import pandas as pd
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> path = 'BTC_USD_data/BTC_USD_1h_2022-01-01.csv'
+        >>> df = pd.DataFrame({'Timestamp': [1, 2, 3], 'Close': [100, 110, 95]})
+        >>> df.to_csv(path, index=False)
+        >>> strategy.load_data(path, '2022-01-01').equals(df)
+        True
         """
         if not os.path.exists(path):
             logging.info("Need to download data...")
@@ -121,6 +175,13 @@ class BaseStrategy:
         Plot a figure showing candlestick chart, portfolio values, and portfolio changes.
 
         :return: Plotly figure object.
+
+        Example:
+        >>> import pandas as pd
+        >>> strategy = BaseStrategy('BTC/USD', '1h')
+        >>> df = pd.DataFrame({'Timestamp': [1, 2, 3], 'Close': [100, 110, 95]})
+        >>> strategy.set_data(df)
+        >>> strategy.plot_figure()  # The actual output can vary
         """
         sell, prix, portfolio_values, changes = zip(*self._portfolio_values)
         dates = self._df.index
