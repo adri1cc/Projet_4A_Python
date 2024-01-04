@@ -38,7 +38,8 @@ Update the API keys in `dontshare_config_example.py` and rename it to `dontshare
 
 # Licensing Information
 This project is provided to showcase the author's coding capabilities. Unauthorized distribution, reproduction, or modification of the code is prohibited without explicit approval from the author.
-For inquiries regarding use, sharing, or modification of the code, please contact Paulin Valayé at p.valaye@orange.fr.
+For inquiries regarding use, sharing, or modification of the code, please contact authors.
 
 # Authors
 Paulin Valayé
+Adrien Jacquet cretides
