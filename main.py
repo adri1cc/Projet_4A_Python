@@ -83,7 +83,7 @@ pair = dcc.Dropdown(
 strat = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Strategy 2', 'value': 'Strategy 2'},
+                        {'label': 'RSIStrategy', 'value': 'RSISrategy'},
                         {'label': 'Strategy 3', 'value': 'Strategy 3'},
                             ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
@@ -98,7 +98,7 @@ pair_backtest = dcc.Dropdown(
 strat_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
-                        {'label': 'Strategy 2', 'value': 'Strategy 2'},
+                        {'label': 'RSIStrategy', 'value': 'RSIStrategy'},
                         {'label': 'Strategy 3', 'value': 'Strategy 3'},
                             ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )
