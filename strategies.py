@@ -207,8 +207,10 @@ class SimpleSMALive(BaseStrategy):
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
+
                 valeur_apres_vente = super().get_last_portfolio_value() + \
-                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                     super().get_last_portfolio_value() * (difference_de_prix / prix_achat)
+
                 super().set_last_portfolio_value(valeur_apres_vente)
                 self._portfolio_values.append(
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
@@ -263,7 +265,7 @@ class SimpleSMALive(BaseStrategy):
         return 0
 
 class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour portfolio_values: not enough values to unpack (expected 4, got 0)"
-    def __init__(self, pair, timeframe, rsi_period):
+    def __init__(self, pair, timeframe, rsi_period=14):
         """
         Initialize RSIStrategy object.
 
@@ -333,8 +335,10 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
+
                 valeur_apres_vente = super().get_last_portfolio_value() + \
-                                    super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                
                 super().set_last_portfolio_value(valeur_apres_vente)
                 self._portfolio_values.append(
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
@@ -410,5 +414,75 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
             return "sell"  # sell here
         elif last_rsi < self.__oversold_threshold:
             return "buy"  # buy
+
+        return 0
+
+class Strategy3(SimpleSMALive, RSIStrategy):
+    def __init__(self, pair, timeframe, sma=14, rsi_period=28):
+        """
+        Initialize Strategy3 object.
+
+        :param pair: Trading pair (e.g., 'BTC/USD').
+        :param timeframe: Timeframe for analysis (e.g., '1h').
+        :param sma: Simple Moving Average parameter.
+        :param rsi_period: RSI period for calculation.
+        """
+        # Initialize both parent classes
+        SimpleSMALive.__init__(self, pair, timeframe, sma)
+        RSIStrategy.__init__(self, pair, timeframe, rsi_period)
+
+    def backtest(self, since):
+        """
+        Perform a backtest using a combination of Simple Moving Average (SMA) and Relative Strength Index (RSI) strategies.
+
+        :param since: Start date for the backtest.
+        """
+        # Utilize the backtest methods of both parent classes
+        logging.info("Calculating backtest for Strategy3...")
+
+        # Perform SimpleSMALive backtest
+        super(SimpleSMALive, self).backtest(since)
+
+        # Utilize the data and live trade status from SimpleSMALive
+        sma_data = super(SimpleSMALive, self).get_data()
+        sma_live_trade = super(SimpleSMALive, self).get_live_trade()
+
+        # Set the data and live trade status for RSIStrategy
+        RSIStrategy.backtest(self, since)
+
+        # Calculate trading fees (0.1%)
+        trading_fee_percent = 0.1 / 100
+
+        for trade in self._portfolio_values:
+            timestamp, prix_achat, portfolio_value, difference_de_prix = trade
+
+            # Adjust portfolio value for trading fees on sell orders
+            if difference_de_prix < 0:
+                trading_fee = abs(difference_de_prix) * trading_fee_percent
+                portfolio_value -= trading_fee
+
+            logging.info(
+                f"Trade Details: {timestamp}, Buy Price: {prix_achat}, Portfolio Value: {round(portfolio_value, 2)}")
+
+        # Additional steps or calculations can be added if needed
+        logging.info("Backtest for Strategy3 complete.")
+        return
+
+    def calculate_signal(self):
+        """
+        Calculate the combined signal based on both SMA and RSI.
+
+        :return: Buy, sell, or hold signal.
+        """
+        # Calculate signals from both SMA and RSI
+        sma_signal = super(SimpleSMALive, self).calculate_signal()
+        #rsi_signal = RSIStrategy.calculate_signal(self)  # Use the class name directly instead of super()
+        rsi_signal = super(RSIStrategy, self).generate_signal()
+
+        # Combine signals (For simplicity, considering only buy and sell signals)
+        if sma_signal == "buy" and rsi_signal == "buy":
+            return "buy"
+        elif sma_signal == "sell" and rsi_signal == "sell":
+            return "sell"
 
         return 0
