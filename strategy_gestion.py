@@ -25,7 +25,8 @@ def backtest(value, timeframe, pair, strategy, date):
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
-        'Strategy3': strategies.Strategy3
+        'Strategy3': strategies.Strategy3,
+        'MACD': strategies.MACDLive
     }
 
     if strategy not in strategies_dict:
@@ -50,7 +51,8 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
-        'Strategy3': strategies.Strategy3
+        'Strategy3': strategies.Strategy3,
+        'MACD': strategies.MACDLive
     }
 
     if strategy not in strategies_dict:

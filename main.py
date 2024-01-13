@@ -84,6 +84,7 @@ strat = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'RSIStrategy', 'value': 'RSISrategy'},
+                        {'label': 'MACD', 'value': 'MACD'},
                         {'label': 'Strategy 3', 'value': 'Strategy3'},
                             ],value='SimpleSMA',id='strat-dropdown',style={'color': 'black'}
                     )
@@ -99,6 +100,7 @@ strat_backtest = dcc.Dropdown(
                     options=[
                         {'label': 'SimpleSMA', 'value': 'SimpleSMA'},
                         {'label': 'RSIStrategy', 'value': 'RSIStrategy'},
+                        {'label': 'MACD', 'value': 'MACD'},
                         {'label': 'Strategy 3', 'value': 'Strategy3'},
                             ],value='SimpleSMA',id='strat-backtest-dropdown',style={'color': 'black'}
                     )

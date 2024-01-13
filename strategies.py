@@ -417,6 +417,110 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
 
         return 0
 
+class MACDLive(BaseStrategy):
+    def __init__(self, pair, timeframe, short_window=12, long_window=26, signal_window=9):
+        """
+        Initialize MACDLive object.
+
+        :param pair: Trading pair (e.g., 'BTC/USD').
+        :param timeframe: Timeframe for analysis (e.g., '1h').
+        :param short_window: Short window for MACD calculation.
+        :param long_window: Long window for MACD calculation.
+        :param signal_window: Signal window for MACD calculation.
+        """
+        super().__init__(pair, timeframe)
+        self.__short_window = short_window
+        self.__long_window = long_window
+        self.__signal_window = signal_window
+
+    def update_data(self):
+        """
+        Update historical data for MACD calculation.
+        """
+        if self._df is None:
+            self._df = api.get_ohlcv(self._pair, self._timeframe, limit=self.__long_window + self.__signal_window)
+        new_data = api.get_ohlcv(self._pair, self._timeframe, limit=1)
+        self._df = pd.concat([self._df, new_data], ignore_index=True)
+        self._df = self._df.drop_duplicates(subset=['Timestamp'], keep='last')
+
+    def backtest(self, since):
+        """
+        Perform a backtest using the Moving Average Convergence Divergence (MACD) strategy.
+
+        :param since: Start date for the backtest.
+        """
+        # Utilize inherited methods and attributes
+        logging.info("Calculating backtest ...")
+        if since is None:
+            since = '2023-06-11 00:00:00'
+
+        self.set_live_trade(False)
+        self._portfolio_values = []
+
+        path = self.prepare_backtest_data(since)
+        historical_data = super().load_data(path, since)
+        super().set_data(historical_data.copy())
+
+        initial_portfolio_value = 1000
+        super().set_last_portfolio_value(initial_portfolio_value)
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+
+        close_prices = super().get_data()['Close']
+        timestamps = super().get_data()['Timestamp']
+
+        super().get_data()['Short_MA'] = close_prices.rolling(self.__short_window).mean()
+        super().get_data()['Long_MA'] = close_prices.rolling(self.__long_window).mean()
+
+        super().get_data()['MACD'] = self.calculate_macd(close_prices)
+
+        for i in tqdm(range(self.__long_window + self.__signal_window, len(super().get_data())), desc="Backtesting Progress"):
+            close_price = close_prices.iloc[i]
+            timestamp = timestamps.iloc[i]
+
+            last_macd = super().get_data()['MACD'].iloc[i - 1]
+
+            signal = "buy" if last_macd > 0 else "sell" if last_macd < 0 else 0
+
+            if signal == "buy" and not self.get_live_trade():
+                self.set_live_trade(True)
+                prix_achat = close_price
+                logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+
+            elif signal == "sell" and self.get_live_trade():
+                self.set_live_trade(False)
+                difference_de_prix = close_price - prix_achat
+
+                valeur_apres_vente = super().get_last_portfolio_value() + \
+                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+
+                super().set_last_portfolio_value(valeur_apres_vente)
+                self._portfolio_values.append(
+                    (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
+                    round(difference_de_prix, 2)))
+                logging.info(
+                    f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+
+        logging.info("Backtest complete. Performance metrics:")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        return
+
+    def calculate_macd(self, close_prices):
+        """
+        Calculate MACD values and add them to the DataFrame.
+
+        :param close_prices: Series containing closing prices.
+        :return: MACD values.
+        """
+        short_ema = close_prices.ewm(span=self.__short_window, adjust=False).mean()
+        long_ema = close_prices.ewm(span=self.__long_window, adjust=False).mean()
+        macd = short_ema - long_ema
+        signal_line = macd.ewm(span=self.__signal_window, adjust=False).mean()
+
+        return macd - signal_line
+
+
 class Strategy3(SimpleSMALive, RSIStrategy):
     def __init__(self, pair, timeframe, sma=14, rsi_period=28):
         """
