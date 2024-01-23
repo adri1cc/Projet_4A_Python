@@ -25,7 +25,7 @@ def backtest(value, timeframe, pair, strategy, date):
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
-        'Strategy3': strategies.Strategy3,
+        'SMA_RSI': strategies.SMA_RSI_Strategy,
         'MACD': strategies.MACDLive
     }
 
@@ -51,7 +51,7 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
     strategies_dict = {
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
-        'Strategy3': strategies.Strategy3,
+        'SMA_RSI': strategies.SMA_RSI_Strategy,
         'MACD': strategies.MACDLive
     }
 

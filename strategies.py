@@ -196,7 +196,7 @@ class SimpleSMALive(BaseStrategy):
             timestamp = timestamps.iloc[i]
 
             last_sma = super().get_data()['SMA'].iloc[i - 1]
-            print(last_sma)
+            #print(last_sma)
             signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
             if signal == "buy" and not self.get_live_trade():
@@ -521,7 +521,7 @@ class MACDLive(BaseStrategy):
         return macd - signal_line
 
 
-class Strategy3(SimpleSMALive, RSIStrategy):
+class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
     def __init__(self, pair, timeframe, sma=14, rsi_period=28):
         """
         Initialize Strategy3 object.
@@ -532,6 +532,11 @@ class Strategy3(SimpleSMALive, RSIStrategy):
         :param rsi_period: RSI period for calculation.
         """
         # Initialize both parent classes
+        self.__sma = sma
+        self.__rsi_period = rsi_period
+        self.__overbought_threshold = 70
+        self.__oversold_threshold = 30
+
         SimpleSMALive.__init__(self, pair, timeframe, sma)
         RSIStrategy.__init__(self, pair, timeframe, rsi_period)
 
@@ -541,35 +546,71 @@ class Strategy3(SimpleSMALive, RSIStrategy):
 
         :param since: Start date for the backtest.
         """
-        # Utilize the backtest methods of both parent classes
-        logging.info("Calculating backtest for Strategy3...")
+        # Utilize inherited methods and attributes
+        logging.info("Calculating backtest ...")
+        if since is None:
+            since = '2023-06-11 00:00:00'
 
-        # Perform SimpleSMALive backtest
-        super(SimpleSMALive, self).backtest(since)
+        self.set_live_trade(False)
+        self._portfolio_values = []
 
-        # Utilize the data and live trade status from SimpleSMALive
-        sma_data = super(SimpleSMALive, self).get_data()
-        sma_live_trade = super(SimpleSMALive, self).get_live_trade()
+        path = self.prepare_backtest_data(since)
+        historical_data = super().load_data(path, since)
+        super().set_data(historical_data.copy())
 
-        # Set the data and live trade status for RSIStrategy
-        RSIStrategy.backtest(self, since)
+        initial_portfolio_value = 1000
+        super().set_last_portfolio_value(initial_portfolio_value)
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
 
-        # Calculate trading fees (0.1%)
-        trading_fee_percent = 0.1 / 100
+        close_prices = super().get_data()['Close']
+        timestamps = super().get_data()['Timestamp']
+        #print(close_prices)
 
-        for trade in self._portfolio_values:
-            timestamp, prix_achat, portfolio_value, difference_de_prix = trade
+        super().get_data()['RSI'] = self.calculate_rsi(close_prices)
+        super().get_data()['SMA'] = close_prices.rolling(self.__sma).mean()
 
-            # Adjust portfolio value for trading fees on sell orders
-            if difference_de_prix < 0:
-                trading_fee = abs(difference_de_prix) * trading_fee_percent
-                portfolio_value -= trading_fee
+        for i in tqdm(range(self.__rsi_period, len(super().get_data())), desc="Backtesting Progress"):
+            close_price = close_prices.iloc[i]
+            timestamp = timestamps.iloc[i]
 
-            logging.info(
-                f"Trade Details: {timestamp}, Buy Price: {prix_achat}, Portfolio Value: {round(portfolio_value, 2)}")
+            last_sma = super().get_data()['SMA'].iloc[i - 1]
+            #print(last_sma)
+            signal1 = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
-        # Additional steps or calculations can be added if needed
-        logging.info("Backtest for Strategy3 complete.")
+            last_rsi = super().get_data()['RSI'].iloc[i - 1]
+            #signal = self.generate_signal(last_rsi)
+            signal2 = "buy" if last_rsi < self.__oversold_threshold else "sell" if last_rsi > self.__overbought_threshold else 0
+
+            if signal1 == "buy" and signal2 == "buy" and not self.get_live_trade():
+                self.set_live_trade(True)
+                prix_achat = close_price
+                print("buy")
+                logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+
+            elif signal1 == "sell" and signal2 == "sell" and self.get_live_trade():
+                self.set_live_trade(False)
+                difference_de_prix = close_price - prix_achat
+                frais_de_vente = 0.001  # Frais de vente de 0.1%
+                difference_de_prix -= prix_achat * frais_de_vente  # Appliquer les frais
+                print("sell")
+
+                valeur_apres_vente = super().get_last_portfolio_value() + \
+                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat
+                
+                super().set_last_portfolio_value(valeur_apres_vente)
+                self._portfolio_values.append(
+                    (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
+                    round(difference_de_prix, 2)))
+                logging.info(
+                    f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+
+            else:
+                print("0")
+
+        logging.info("Backtest complete. Performance metrics:")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
         return
 
     def calculate_signal(self):
@@ -590,3 +631,93 @@ class Strategy3(SimpleSMALive, RSIStrategy):
             return "sell"
 
         return 0
+
+class MixStrategy(BaseStrategy):
+    def __init__(self, pair, timeframe, sma, rsi_period=14, short_window=12, long_window=26, signal_window=9):
+        """
+        Initialize MixStrategy object.
+
+        :param pair: Trading pair (e.g., 'BTC/USD').
+        :param timeframe: Timeframe for analysis (e.g., '1h').
+        :param sma: Simple Moving Average parameter.
+        :param rsi_period: RSI period for calculation.
+        :param short_window: Short window for MACD calculation.
+        :param long_window: Long window for MACD calculation.
+        :param signal_window: Signal window for MACD calculation.
+        """
+        super().__init__(pair, timeframe)
+        self.sma_strategy = SimpleSMALive(pair, timeframe, sma)
+        self.rsi_strategy = RSIStrategy(pair, timeframe, rsi_period)
+        self.macd_strategy = MACDLive(pair, timeframe, short_window, long_window, signal_window)
+        self._fees = 0.001  # 0.1% fees
+
+    def backtest(self, since):
+        """
+        Perform a backtest using a combination of SMA, RSI, and MACD strategies.
+
+        :param since: Start date for the backtest.
+        """
+        # Utilize inherited methods and attributes
+        logging.info("Calculating backtest ...")
+        if since is None:
+            since = '2023-06-11 00:00:00'
+
+        self.set_live_trade(False)
+        self._portfolio_values = []
+
+        path = self.prepare_backtest_data(since)
+        historical_data = super().load_data(path, since)
+        super().set_data(historical_data.copy())
+
+        initial_portfolio_value = 1000
+        super().set_last_portfolio_value(initial_portfolio_value)
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+
+        close_prices = super().get_data()['Close']
+        timestamps = super().get_data()['Timestamp']
+
+        self.sma_strategy.set_data(super().get_data())
+        self.rsi_strategy.set_data(super().get_data())
+        self.macd_strategy.set_data(super().get_data())
+
+        self.sma_strategy.backtest(since)
+        self.rsi_strategy.backtest(since)
+        self.macd_strategy.backtest(since)
+
+        for i in tqdm(range(len(super().get_data())), desc="MixStrategy Backtesting Progress"):
+            timestamp = timestamps.iloc[i]
+
+            sma_signal = self.sma_strategy.calculate_signal()
+            rsi_signal = self.rsi_strategy.calculate_signal()
+            macd_signal = self.macd_strategy.calculate_signal()
+
+            # Apply a combination strategy: buy if at least two strategies give a buy signal, sell if at least two give a sell signal
+            signals = [sma_signal, rsi_signal, macd_signal]
+            buy_signals = sum([1 for signal in signals if signal == "buy"])
+            sell_signals = sum([1 for signal in signals if signal == "sell"])
+
+            if buy_signals >= 2 and not self.get_live_trade():
+                self.set_live_trade(True)
+                prix_achat = close_prices.iloc[i]
+                logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+
+            elif sell_signals >= 2 and self.get_live_trade():
+                self.set_live_trade(False)
+                difference_de_prix = close_prices.iloc[i] - prix_achat
+
+                valeur_apres_vente = super().get_last_portfolio_value() + \
+                                     super().get_last_portfolio_value() * difference_de_prix / prix_achat - self._fees
+
+                super().set_last_portfolio_value(valeur_apres_vente)
+                self._portfolio_values.append(
+                    (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
+                     round(difference_de_prix, 2)))
+                logging.info(
+                    f"Sell Signal: {timestamp}, Price: {close_prices.iloc[i]}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+
+        logging.info("MixStrategy Backtest complete. Performance metrics:")
+        logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        logging.info(
+            f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        return
