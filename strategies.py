@@ -9,8 +9,6 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from tqdm import tqdm
 
-import api
-
 class BaseStrategy:
     def __init__(self, pair, timeframe):
         """
@@ -96,6 +94,8 @@ class BaseStrategy:
         """
         if self._df is None or len(self._df) == 0:
             logging.warning("DataFrame is empty or None.")
+            api.add_data("DataFrame is empty or None", str(api.datetime.now()))
+
             return True
         return False
     
@@ -109,10 +109,14 @@ class BaseStrategy:
         """
         if not os.path.exists(path):
             logging.info("Need to download data...")
+            api.add_data("Need to download data...", str(api.datetime.now()))
+
             historical_data = api.get_historical_data(self._pair, self._timeframe, since)
             historical_data = pd.read_csv(path)
         else:
             logging.info("Using existing data...")
+            api.add_data("Using existing data...", str(api.datetime.now()))
+
             historical_data = pd.read_csv(path)
         return historical_data
     
@@ -139,7 +143,6 @@ class BaseStrategy:
         Destructor method.
         """
         return
-
 
 class SimpleSMALive(BaseStrategy):
     def __init__(self, pair, timeframe, sma):
@@ -171,7 +174,9 @@ class SimpleSMALive(BaseStrategy):
         :param since: Start date for the backtest.
         """
         # Utilize inherited methods and attributes
-        logging.info("Calculating backtest ...")
+        logging.info("Calculating backtest...")
+        api.add_data("Calculating backtest...", str(api.datetime.now()))
+
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -185,6 +190,7 @@ class SimpleSMALive(BaseStrategy):
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -203,6 +209,8 @@ class SimpleSMALive(BaseStrategy):
                 self.set_live_trade(True)
                 prix_achat = close_price
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+                api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
+
 
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
@@ -216,11 +224,21 @@ class SimpleSMALive(BaseStrategy):
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
                      round(difference_de_prix, 2)))
                 logging.info(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+                api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
+
 
         logging.info("Backtest complete. Performance metrics:")
+        api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
+
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
         logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
+        api.add_data(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}", str(api.datetime.now()))
+
         logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
+
         return
 
     # Override or add other methods as needed...
@@ -298,6 +316,8 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
         """
         # Utilize inherited methods and attributes
         logging.info("Calculating backtest ...")
+        api.add_data("Calculating backtest ...", str(api.datetime.now()))
+
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -311,6 +331,7 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -331,6 +352,7 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
                 self.set_live_trade(True)
                 prix_achat = close_price
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+                api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
 
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
@@ -345,14 +367,22 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
                     round(difference_de_prix, 2)))
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+                api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
 
             elif signal == "0":
                 print("0")
 
         logging.info("Backtest complete. Performance metrics:")
+        api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
+
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
         logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
-        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        api.add_data(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}", str(api.datetime.now()))
+
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
         return
 
     # Override or add other methods as needed...
@@ -451,6 +481,8 @@ class MACDLive(BaseStrategy):
         """
         # Utilize inherited methods and attributes
         logging.info("Calculating backtest ...")
+        api.add_data("Calculating backtest ...", str(api.datetime.now()))
+
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -464,6 +496,7 @@ class MACDLive(BaseStrategy):
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -485,6 +518,8 @@ class MACDLive(BaseStrategy):
                 self.set_live_trade(True)
                 prix_achat = close_price
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+                api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
+
 
             elif signal == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
@@ -499,11 +534,19 @@ class MACDLive(BaseStrategy):
                     round(difference_de_prix, 2)))
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+                api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
 
         logging.info("Backtest complete. Performance metrics:")
+        api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
+
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
         logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
-        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        api.add_data(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}", str(api.datetime.now()))
+
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
         return
 
     def calculate_macd(self, close_prices):
@@ -519,7 +562,13 @@ class MACDLive(BaseStrategy):
         signal_line = macd.ewm(span=self.__signal_window, adjust=False).mean()
 
         return macd - signal_line
+    
+    def calculate_signal(self):
 
+        last_macd = super().get_data()['MACD'].iloc[-1]
+
+        signal = "buy" if last_macd > 0 else "sell" if last_macd < 0 else 0
+        return signal
 
 class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
     def __init__(self, pair, timeframe, sma=14, rsi_period=28):
@@ -548,6 +597,8 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
         """
         # Utilize inherited methods and attributes
         logging.info("Calculating backtest ...")
+        api.add_data("Calculating backtest ...", str(api.datetime.now()))
+
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -561,6 +612,8 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -586,6 +639,8 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
                 prix_achat = close_price
                 print("buy")
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+                api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
+
 
             elif signal1 == "sell" and signal2 == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
@@ -603,14 +658,23 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
                     round(difference_de_prix, 2)))
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
+                api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
+
 
             else:
                 print("0")
 
         logging.info("Backtest complete. Performance metrics:")
+        api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
+
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
         logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
-        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        api.add_data(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}", str(api.datetime.now()))
+
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
         return
 
     def calculate_signal(self):
@@ -632,7 +696,7 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
 
         return 0
 
-class MixStrategy(BaseStrategy):
+class MixStrategy(BaseStrategy): # TODO Trop long à s'éxecuter
     def __init__(self, pair, timeframe, sma, rsi_period=14, short_window=12, long_window=26, signal_window=9):
         """
         Initialize MixStrategy object.
@@ -659,6 +723,8 @@ class MixStrategy(BaseStrategy):
         """
         # Utilize inherited methods and attributes
         logging.info("Calculating backtest ...")
+        api.add_data("Calculating backtest ...", str(api.datetime.now()))
+
         if since is None:
             since = '2023-06-11 00:00:00'
 
@@ -672,6 +738,8 @@ class MixStrategy(BaseStrategy):
         initial_portfolio_value = 1000
         super().set_last_portfolio_value(initial_portfolio_value)
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
@@ -688,7 +756,7 @@ class MixStrategy(BaseStrategy):
             timestamp = timestamps.iloc[i]
 
             sma_signal = self.sma_strategy.calculate_signal()
-            rsi_signal = self.rsi_strategy.calculate_signal()
+            rsi_signal = self.rsi_strategy.generate_signal()
             macd_signal = self.macd_strategy.calculate_signal()
 
             # Apply a combination strategy: buy if at least two strategies give a buy signal, sell if at least two give a sell signal
@@ -700,6 +768,8 @@ class MixStrategy(BaseStrategy):
                 self.set_live_trade(True)
                 prix_achat = close_prices.iloc[i]
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
+                api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
+
 
             elif sell_signals >= 2 and self.get_live_trade():
                 self.set_live_trade(False)
@@ -715,9 +785,15 @@ class MixStrategy(BaseStrategy):
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_prices.iloc[i]}, Portfolio Value: {round(valeur_apres_vente, 2)}")
 
-        logging.info("MixStrategy Backtest complete. Performance metrics:")
+        logging.info("Backtest complete. Performance metrics:")
+        api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
+
         logging.info(f"Initial Portfolio Value: {initial_portfolio_value}")
+        api.add_data(f"Initial Portfolio Value: {initial_portfolio_value}", str(api.datetime.now()))
+
         logging.info(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}")
-        logging.info(
-            f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}")
+        api.add_data(f"Final Portfolio Value: {round(super().get_last_portfolio_value(), 2)}", str(api.datetime.now()))
+
+        logging.info(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%")
+        api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
         return
