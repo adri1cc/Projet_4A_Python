@@ -5,10 +5,64 @@ from datetime import datetime
 import os
 import ccxt
 import logging
+import sqlite3
 import pandas as pd
 import plotly.graph_objects as go
 
 import dontshare_config as dc
+
+def create_database():
+    conn = sqlite3.connect('log_base.db')
+    cursor = conn.cursor()
+
+    cursor.execute(f"DROP TABLE IF EXISTS logs")
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS logs(
+            id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+            name TEXT NOT NULL,
+            date TEXT NOT NULL
+        );
+    ''')
+
+    conn.commit()
+    conn.close()
+
+def add_data(name, date):
+    # Establish connection to the database
+    conn = sqlite3.connect('log_base.db')
+    cursor = conn.cursor()
+
+    # Insert data into the table
+    cursor.execute('''INSERT INTO logs (name, date) VALUES (?, ?)''', (name, date))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
+import sqlite3
+
+def print_dataset():
+    # Establish connection to the database
+    conn = sqlite3.connect('log_base.db')
+    cursor = conn.cursor()
+
+    # Execute a SELECT query to retrieve data from the database
+    cursor.execute('''SELECT * FROM logs''')
+    
+    # Fetch all rows from the result set
+    rows = cursor.fetchall()
+
+    # Print the data
+    for row in rows:
+        print(row)
+
+    # Close the connection
+    conn.close()
+
+if __name__ == "__main__":
+    print_dataset()
+
 
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
@@ -70,10 +124,16 @@ def get_info_account():
 
     except ccxt.NetworkError as e:
         logging.info('Connection problem: ', type(e).__name__, str(e))
+        add_data("Connection problem.", str(datetime.now()))
+
     except ccxt.ExchangeError as e:
         logging.info('Exchange error: ', type(e).__name__, str(e))
+        add_data("Exchange error.", str(datetime.now()))
+
     except Exception as e:
         logging.info('An error occurred: ', type(e).__name__, str(e))
+        add_data("An error occurred.", str(datetime.now()))
+
 
 def plot_info_account(df_account):
      table_trace = go.Table(
@@ -94,6 +154,8 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
     :return: Pandas DataFrame with OHLCV data.
     """
     logging.info("Fetching data...")
+    add_data("Fetching data...", str(datetime.now()))
+
     try:
         candles = exchange.fetch_ohlcv(symbol, timeframe, since, limit)
 
@@ -108,14 +170,21 @@ def get_ohlcv(symbol, timeframe, since: int | None = None, limit: int | None = N
         columns = ['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']
         df = pd.DataFrame(candle_data, columns=columns)
         logging.info("Data retrieved")
+        add_data("Data retrieved.", str(datetime.now()))
+
         return df
 
     except ccxt.NetworkError as e:
         logging.info('Connection problem: ', type(e).__name__, str(e))
+        add_data("Connection problem.", str(datetime.now()))
+
     except ccxt.ExchangeError as e:
         logging.info('Exchange error: ', type(e).__name__, str(e))
+        add_data("Exchange error.", str(datetime.now()))
+
     except Exception as e:
         logging.info('An error occurred: ', type(e).__name__, str(e))
+        add_data("An error occurred.", str(datetime.now()))
 
 def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profit=None, investment_value=None,
                 limit_price=None):
@@ -146,13 +215,21 @@ def place_order(symbol="BTC/USDT", direction="short", stop_loss=None, take_profi
         # Place the order
         order = exchange.create_order(**order_params)
         logging.info('Order placed successfully:', order)
+        add_data("Order placed succesfully.", str(datetime.now()))
+
 
     except ccxt.NetworkError as e:
         logging.info('Connection problem: ', type(e).__name__, str(e))
+        add_data("Connection problem.", str(datetime.now()))
+
     except ccxt.ExchangeError as e:
         logging.info('Exchange error: ', type(e).__name__, str(e))
+        add_data("Exchange error.", str(datetime.now()))
+
     except Exception as e:
         logging.info('An error occurred: ', type(e).__name__, str(e))
+        add_data("An error occurred.", str(datetime.now()))
+
     return
 
 def get_quantity(pair, side):
@@ -165,6 +242,8 @@ def get_quantity(pair, side):
     """
     balance = get_info_account()
     logging.info(balance['Currency'])
+    add_data(str(balance['Currency']), str(datetime.now()))
+
     quantity = 0
     base_currency, quote_currency = pair.split("/")
 
@@ -172,19 +251,26 @@ def get_quantity(pair, side):
 
         if base_currency not in balance['Currency'].values:
             logging.info(f"{base_currency} not found in the balance.")
+            add_data(f"{base_currency} not found in the balance.", str(datetime.now()))
+
             return 0
 
         quantity = balance['Free'][balance['Currency'] == base_currency].values[0]
         logging.info(f"Quantity of {base_currency} for {side}: {quantity}")
+        add_data(f"Quantity of {base_currency} for {side}: {quantity}", str(datetime.now()))
 
     elif side == "buy":
 
         if quote_currency not in balance['Currency'].values:
             logging.info(f"{quote_currency} not found in the balance.")
+            add_data(f"{base_currency} not found in the balance.", str(datetime.now()))
+
             return 0
 
         quantity = balance['Free'][balance['Currency'] == quote_currency].values[0]
         logging.info(f"Quantity of {quote_currency} for {side}: {quantity}")
+        add_data(f"Quantity of {base_currency} for {side}: {quantity}", str(datetime.now()))
+
 
     return quantity
 
@@ -204,6 +290,7 @@ def get_historical_data(pair, timeframe, since):# TODO add gestion of out of ran
     # Download historical values from "since"
     while True:
         logging.info("Downloading...")
+        add_data("Downloading...", str(datetime.now()))
         from_ts = ohlcv[-1][0]
         new_ohlcv = exchange.fetch_ohlcv(pair, timeframe, since=from_ts, limit=1000)
         ohlcv.extend(new_ohlcv)

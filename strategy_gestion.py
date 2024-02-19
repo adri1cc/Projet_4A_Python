@@ -38,7 +38,8 @@ def backtest(value, timeframe, pair, strategy, date):
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
         'SMA_RSI': strategies.SMA_RSI_Strategy,
-        'MACD': strategies.MACDLive
+        'MACD': strategies.MACDLive,
+        'Mix': strategies.MixStrategy
     }
 
     if strategy not in strategies_dict:
@@ -68,7 +69,8 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
         'SimpleSMA': strategies.SimpleSMALive,
         'RSIStrategy': strategies.RSIStrategy,
         'SMA_RSI': strategies.SMA_RSI_Strategy,
-        'MACD': strategies.MACDLive
+        'MACD': strategies.MACDLive,
+        'Mix': strategies.MixStrategy
     }
 
     if strategy not in strategies_dict:
@@ -78,6 +80,7 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
 
     while not trading_logic['stop_flag']:
         logging.info("Live trading is running")
+        api.add_data("Live trading is running", str(api.datetime.now()))
 
         result = strategy_instance.calculate_signal()
 
@@ -95,13 +98,18 @@ def start_trade(trading_logic, timeframe, pair, strategy, percentage):
 
             if quantity_sell > 0:
                 logging.info("Launch sell order")
+                api.add_data("Launch sell order", str(api.datetime.now()))
+
                 # place_order(pair, "sell", investment, "market")
                 strategy_instance.set_live_trade(False)
                 
             else:
                 logging.info("Not enough funds")
+                api.add_data("Not enough funds", str(api.datetime.now()))
 
     logging.info("Live trading is stopped")
+    api.add_data("Live trading is stopped", str(api.datetime.now()))
+
     del strategy_instance
     
 def stop_trade(trading_logic):
