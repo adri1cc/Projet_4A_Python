@@ -136,6 +136,8 @@ def get_info_account():
 
 
 def plot_info_account(df_account):
+     logging.info("Plotting info account")
+     add_data("Plotting info account", str(datetime.now()))
      table_trace = go.Table(
      header=dict(values=df_account.columns),
      cells=dict(values=[df_account[col] for col in df_account.columns])

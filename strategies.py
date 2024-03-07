@@ -637,7 +637,7 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
             if signal1 == "buy" and signal2 == "buy" and not self.get_live_trade():
                 self.set_live_trade(True)
                 prix_achat = close_price
-                print("buy")
+                #print("buy")
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
                 api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
 
@@ -647,7 +647,7 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
                 difference_de_prix = close_price - prix_achat
                 frais_de_vente = 0.001  # Frais de vente de 0.1%
                 difference_de_prix -= prix_achat * frais_de_vente  # Appliquer les frais
-                print("sell")
+                #print("sell")
 
                 valeur_apres_vente = super().get_last_portfolio_value() + \
                                      super().get_last_portfolio_value() * difference_de_prix / prix_achat
@@ -661,8 +661,8 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
                 api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
 
 
-            else:
-                print("0")
+            # else:
+            #     print("0")
 
         logging.info("Backtest complete. Performance metrics:")
         api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
