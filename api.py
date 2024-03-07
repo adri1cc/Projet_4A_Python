@@ -40,8 +40,6 @@ def add_data(name, date):
     conn.commit()
     conn.close()
 
-import sqlite3
-
 def print_dataset():
     # Establish connection to the database
     conn = sqlite3.connect('log_base.db')
@@ -59,10 +57,6 @@ def print_dataset():
 
     # Close the connection
     conn.close()
-
-if __name__ == "__main__":
-    print_dataset()
-
 
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
