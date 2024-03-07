@@ -454,27 +454,18 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
 
         :param close_prices: Series containing closing prices.
         """
-        # Extract the 'Close' column if close_prices is a DataFrame
-        #close_prices = close_prices['Close'] if isinstance(close_prices, pd.DataFrame) else close_prices
 
         daily_returns = close_prices.diff().dropna()
-        #print(daily_returns)
         
-        # Calculate gain and loss with positive and negative values
-        #gain = daily_returns[daily_returns > 0].rolling(self.__rsi_period).mean()
         gain = daily_returns.apply(lambda x: x if x>0 else 0)
-        #print(gain) 
-        #loss = -daily_returns[daily_returns < 0].rolling(self.__rsi_period).mean()
         loss = daily_returns.apply(lambda x: -x if x<0 else 0)
-        #print(loss) 
 
-        # Handling division by zero
+        # Case: division by zero
         if loss.empty or (loss == 0).all():
             return pd.Series([100.0] * len(close_prices), index=close_prices.index)
 
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
-        #print(rsi)
 
         # Create a new Series with None values and the appropriate index
         none_values = pd.Series([None] * (self.__rsi_period - 1), index=range(self.__rsi_period - 1))
