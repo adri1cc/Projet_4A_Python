@@ -4,3 +4,4 @@ dontshare_config.py
 **/.DS_Store
 **/__pycache__/
 app.log
+log_base.db
