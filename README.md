@@ -1,45 +1,31 @@
-# Trading Dashboard with Dash
+# Bot de Trading Automatisé
 
-## Overview
+Ce répertoire git présente le travail réalisé au cours de notre quatrième année à POLYTECH Dijon sur la création d’un bot de trading, avec pour objectif d’automatiser des transactions sur des exchanges centralisés (CEX).
 
-This repository contains the source code for a trading dashboard built using Dash, Plotly, and CCXT. The dashboard provides live trading functionalities, backtesting, and analysis tools.
+## Objectif du Projet
+Le projet vise à développer un bot de trading capable de réaliser des transactions sur les paires de devises suivantes : BTC/USDT, ETH/USDT et SOL/USDT. Au cours du semestre précédent, nous avions déjà réalisé les tâches suivantes :
 
-## Table of Contents
+- Création d'une interface graphique à l’aide de la librairie Dash
+- Fonctionnalité pour lancer et arrêter des trades
+- Implémentation d’une première stratégie basée sur le SMA (Simple Moving Average)
+- Programmation d’une fonction pour réaliser un backtest à partir d’anciennes données
+- Affichage du portefeuille
+- Affichage des logs
 
-- [Dependencies](#dependencies)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Licensing Information](#Licensing-Information)
-- [Authors](#authors)
+## Nouvelles Fonctionnalités
+Au cours de ce semestre, notre objectif était de développer de nouvelles stratégies efficaces en se concentrant sur deux approches principales :
 
-### Dependencies
+1. **Utilisation d'indicateurs existants :** Nous avons ajouté deux nouveaux indicateurs dans le fichier `strategies.py` en plus du SMA :
+   - RSI (Relative Strength Index) : Donne une indication du surachat et de la survente d’une valeur.
+   - MACD (Moving Average Convergence Divergence) : Calcule la différence entre deux moyennes mobiles établies sur différentes échelles de temps.
 
-- Python 3.x
-- Dash
-- CCXT
-- Plotly
-- Pandas
-- Tqdm
+2. **Deep Reinforcement Learning (DRL) :** Nous avons exploré cette branche du machine learning pour développer des stratégies plus avancées.
 
-### Getting Started
+## Base de Données
+Nous avons également travaillé sur la création d’une base de données à l’aide de la librairie SQLite. Cela nous permet d’avoir un accès complet aux logs générés lors de l’utilisation du bot.
 
-1. Install dependencies: `pip install -r requirements.txt`.
-2. Run the Dash app: `python main.py`.
+## Auteurs
+Ce projet a été réalisé par l'équipe de développement de POLYTECH Dijon :
+- JACQUET CRETIDES Adrien
+- VALAYE Paulin 
 
-### Configuration
-Update the API keys in `dontshare_config_example.py` and rename it to `dontshare_config.py` with your own keys for the supported exchanges (MEXC, Binance, Coinbase).
-
-### Usage
-1. Launch the trading dashboard by running `main.py`.
-2. Navigate the UI to select trading pairs, strategies, and configure settings.
-3. Start and stop live trading, analyze strategies, and view wallet information.
-
-
-# Licensing Information
-This project is provided to showcase the author's coding capabilities. Unauthorized distribution, reproduction, or modification of the code is prohibited without explicit approval from the author.
-For inquiries regarding use, sharing, or modification of the code, please contact authors.
-
-# Authors
-Paulin Valayé
-Adrien Jacquet Cretides
