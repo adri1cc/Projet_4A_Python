@@ -1,6 +1,9 @@
 """
 This script contains the code for a trading dashboard using Dash.
 """
+# TODO Améliorer l'interface graphique
+# TODO Débuger l'interafce graphique
+
 
 from datetime import datetime
 import os
