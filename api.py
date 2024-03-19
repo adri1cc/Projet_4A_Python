@@ -58,6 +58,23 @@ def print_dataset():
     # Close the connection
     conn.close()
 
+def get_last_data():
+    # Establish connection to the database
+    conn = sqlite3.connect('log_base.db')
+    cursor = conn.cursor()
+
+    # Execute a SELECT query to retrieve data from the database
+    cursor.execute('''SELECT * FROM logs WHERE id=(SELECT max(id) FROM logs)''')
+    
+    # Fetch all rows from the result set
+    row = cursor.fetchall()
+
+    # Print the data
+    print(row)
+
+    # Close the connection
+    conn.close()
+
 # Create an instance of the Mexc client
 mexc = ccxt.mexc({
     'apiKey': dc.API_KEY_MEXC,  # Public API key
@@ -96,6 +113,9 @@ def get_info_account():
 
     :return: Pandas DataFrame with account information.
     """
+    logging.info("Plotting info account")
+    add_data("Plotting info account", str(datetime.now()))
+    
     try:
         balance = exchange.fetch_balance()
 
@@ -130,8 +150,6 @@ def get_info_account():
 
 
 def plot_info_account(df_account):
-     logging.info("Plotting info account")
-     add_data("Plotting info account", str(datetime.now()))
      table_trace = go.Table(
      header=dict(values=df_account.columns),
      cells=dict(values=[df_account[col] for col in df_account.columns])

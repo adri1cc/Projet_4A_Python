@@ -1,9 +1,6 @@
 """
 This script contains the code for a trading dashboard using Dash.
 """
-# TODO Améliorer l'interface graphique
-# TODO Débuger l'interafce graphique
-
 
 from datetime import datetime
 import os
@@ -16,8 +13,6 @@ from dash_bootstrap_templates import load_figure_template
 from dash.exceptions import PreventUpdate
 
 from strategy_gestion import start_trade, create_trading_logic, backtest, stop_trade, get_investment
-
-import sqlite3
 
 # Log file creation
 log_file = os.path.join(os.getcwd(), 'app.log')
@@ -276,18 +271,6 @@ def trade(n_clicks_trade, n_clicks_stop, strat_live, pair_live, percentage, prev
         return 'Trade stopped'
     else:
         return previous_message
-    
-    # if n_clicks_trade is not None and n_clicks_trade > previous_state['trade']:
-    #     previous_state['trade'] = n_clicks_trade
-    #     trading_logic['stop_flag'] = False
-    #     start_trade(trading_logic, "5m", pair_live, strat_live, percentage) #Ne s'arrête jamais et ne peut donc pas passer au return
-    #     return 'Trade started' # TODO resolve return
-    # elif n_clicks_stop is not None and n_clicks_stop > previous_state['stop']:
-    #     previous_state['stop'] = n_clicks_stop
-    #     stop_trade(trading_logic)
-    #     return 'Trade stopped'
-    # else:
-    #     return previous_message
     
 @callback(
     Output('output-date', 'children'),

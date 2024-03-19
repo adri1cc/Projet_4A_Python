@@ -263,7 +263,6 @@ class SimpleSMALive(BaseStrategy):
             timestamp = timestamps.iloc[i]
 
             last_sma = super().get_data()['SMA'].iloc[i - 1]
-            #print(last_sma)
             signal = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
             if signal == "buy" and not self.get_live_trade():
@@ -284,6 +283,7 @@ class SimpleSMALive(BaseStrategy):
                 self._portfolio_values.append(
                     (timestamp, round(prix_achat, 2), round(super().get_last_portfolio_value(), 2),
                      round(difference_de_prix, 2)))
+                
                 logging.info(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
                 api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
 
@@ -301,8 +301,6 @@ class SimpleSMALive(BaseStrategy):
         api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
 
         return
-
-    # Override or add other methods as needed...
 
     def calculate_signal(self):
         """
@@ -343,7 +341,7 @@ class SimpleSMALive(BaseStrategy):
 
         return 0
 
-class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour portfolio_values: not enough values to unpack (expected 4, got 0)"
+class RSIStrategy(BaseStrategy): 
     def __init__(self, pair, timeframe, rsi_period=14):
         """
         Initialize RSIStrategy object.
@@ -396,7 +394,6 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
-        #print(close_prices)
 
         super().get_data()['RSI'] = self.calculate_rsi(close_prices)
 
@@ -406,7 +403,6 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
 
             last_rsi = super().get_data()['RSI'].iloc[i - 1]
 
-            #signal = self.generate_signal(last_rsi)
             signal = "buy" if last_rsi < self.__oversold_threshold else "sell" if last_rsi > self.__overbought_threshold else 0
 
             if signal == "buy" and not self.get_live_trade():
@@ -446,35 +442,24 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
         api.add_data(f"Portfolio Return: {100 * (super().get_last_portfolio_value() / initial_portfolio_value - 1):.2f}%", str(api.datetime.now()))
         return
 
-    # Override or add other methods as needed...
-
     def calculate_rsi(self, close_prices):
         """
         Calculate RSI values and add them to the DataFrame.
 
         :param close_prices: Series containing closing prices.
         """
-        # Extract the 'Close' column if close_prices is a DataFrame
-        #close_prices = close_prices['Close'] if isinstance(close_prices, pd.DataFrame) else close_prices
 
         daily_returns = close_prices.diff().dropna()
-        #print(daily_returns)
         
-        # Calculate gain and loss with positive and negative values
-        #gain = daily_returns[daily_returns > 0].rolling(self.__rsi_period).mean()
         gain = daily_returns.apply(lambda x: x if x>0 else 0)
-        #print(gain) 
-        #loss = -daily_returns[daily_returns < 0].rolling(self.__rsi_period).mean()
         loss = daily_returns.apply(lambda x: -x if x<0 else 0)
-        #print(loss) 
 
-        # Handling division by zero
+        # Case: division by zero
         if loss.empty or (loss == 0).all():
             return pd.Series([100.0] * len(close_prices), index=close_prices.index)
 
         rs = gain / loss
         rsi = 100 - (100 / (1 + rs))
-        #print(rsi)
 
         # Create a new Series with None values and the appropriate index
         none_values = pd.Series([None] * (self.__rsi_period - 1), index=range(self.__rsi_period - 1))
@@ -502,9 +487,9 @@ class RSIStrategy(BaseStrategy): #TODO La rendre fonctionnelle "ValueError pour 
             return 0
 
         if last_rsi > self.__overbought_threshold:
-            return "sell"  # sell here
+            return "sell" 
         elif last_rsi < self.__oversold_threshold:
-            return "buy"  # buy
+            return "buy" 
 
         return 0
 
@@ -678,7 +663,6 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
 
         close_prices = super().get_data()['Close']
         timestamps = super().get_data()['Timestamp']
-        #print(close_prices)
 
         super().get_data()['RSI'] = self.calculate_rsi(close_prices)
         super().get_data()['SMA'] = close_prices.rolling(self.__sma).mean()
@@ -688,17 +672,14 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
             timestamp = timestamps.iloc[i]
 
             last_sma = super().get_data()['SMA'].iloc[i - 1]
-            #print(last_sma)
             signal1 = "buy" if close_price > last_sma else "sell" if close_price < last_sma else 0
 
             last_rsi = super().get_data()['RSI'].iloc[i - 1]
-            #signal = self.generate_signal(last_rsi)
             signal2 = "buy" if last_rsi < self.__oversold_threshold else "sell" if last_rsi > self.__overbought_threshold else 0
 
             if signal1 == "buy" and signal2 == "buy" and not self.get_live_trade():
                 self.set_live_trade(True)
                 prix_achat = close_price
-                #print("buy")
                 logging.info(f"Buy Signal: {timestamp}, Price: {prix_achat}")
                 api.add_data(f"Buy Signal: {timestamp}, Price: {prix_achat}", str(api.datetime.now()))
 
@@ -706,9 +687,8 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
             elif signal1 == "sell" and signal2 == "sell" and self.get_live_trade():
                 self.set_live_trade(False)
                 difference_de_prix = close_price - prix_achat
-                frais_de_vente = 0.001  # Frais de vente de 0.1%
-                difference_de_prix -= prix_achat * frais_de_vente  # Appliquer les frais
-                #print("sell")
+                frais_de_vente = 0.00 # = 0.001 for 0.1% trading fees
+                difference_de_prix -= prix_achat * frais_de_vente  # Apply fees
 
                 valeur_apres_vente = super().get_last_portfolio_value() + \
                                      super().get_last_portfolio_value() * difference_de_prix / prix_achat
@@ -720,10 +700,6 @@ class SMA_RSI_Strategy(SimpleSMALive, RSIStrategy):
                 logging.info(
                     f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}")
                 api.add_data(f"Sell Signal: {timestamp}, Price: {close_price}, Portfolio Value: {round(valeur_apres_vente, 2)}", str(api.datetime.now()))
-
-
-            # else:
-            #     print("0")
 
         logging.info("Backtest complete. Performance metrics:")
         api.add_data("Backtest complete. Performance metrics:", str(api.datetime.now()))
@@ -821,6 +797,7 @@ class MixStrategy(BaseStrategy): # TODO Trop long à s'éxecuter
             macd_signal = self.macd_strategy.calculate_signal()
 
             # Apply a combination strategy: buy if at least two strategies give a buy signal, sell if at least two give a sell signal
+
             signals = [sma_signal, rsi_signal, macd_signal]
             buy_signals = sum([1 for signal in signals if signal == "buy"])
             sell_signals = sum([1 for signal in signals if signal == "sell"])
