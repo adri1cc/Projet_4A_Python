@@ -1,0 +1,5 @@
+ticker,features,lags,episodes,learning_rate,tau,gamma,epsilon_decay,buy_and_hold,perf_on_test,comment
+['BTCUSDT'],['log-ret'],10,10,0.0001,0.001,0.5,0.98,4.316898205259645,-3.048718513529014,add you comment here
+['BTCUSDT'],['log-ret'],10,50,0.0001,0.001,0.5,0.98,19.80829015544041,-21.482659084540177,add you comment here
+['BTCUSDT'],"['log-ret', 'close_12_sma', 'close_24_sma']",10,50,0.0001,0.001,0.75,0.98,7.108937311701635,-5.270316736557701,add you comment here
+['BTCUSDT'],"['rsi', 'volatility', 'volumeSma', 'forceIndex']",10,12,0.0001,0.001,0.98,0.98,-6.508438856321474,-4.317739498558337,add you comment here
