@@ -13,7 +13,7 @@ Le projet vise à développer un bot de trading capable de réaliser des transac
 - Affichage des logs
 
 ## Nouvelles Fonctionnalités
-Au cours de ce semestre, notre objectif était de développer de nouvelles stratégies efficaces en se concentrant sur deux approches principales :
+Au cours du deuxième semestre, notre objectif était de développer de nouvelles stratégies efficaces en se concentrant sur deux approches principales :
 
 1. **Utilisation d'indicateurs existants :** Nous avons ajouté deux nouveaux indicateurs dans le fichier `strategies.py` en plus du SMA :
    - RSI (Relative Strength Index) : Donne une indication du surachat et de la survente d’une valeur.
